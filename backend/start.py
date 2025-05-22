@@ -30,9 +30,8 @@ def ensure_dependencies_and_model(install_if_missing: bool = False):
                 print(f"❌ Failed to install dependencies: {e}")
                 sys.exit(1)
         else:
-            print("⚠️ Key dependency (FastAPI) not found. Run with --install-deps or ensure requirements.txt is processed by your deployment platform.")
-            # In a production environment, we might not want to exit here if the platform handles it
-            # For now, we'll allow it to proceed, Uvicorn will fail if FastAPI isn't there.
+            print("❌ Key dependency (FastAPI) not found. This should have been installed during the Docker build process. Please check the Dockerfile and build logs.")
+            sys.exit(1) # Exit if essential deps are missing in Docker
 
     # Check for spaCy model
     try:
@@ -48,7 +47,9 @@ def ensure_dependencies_and_model(install_if_missing: bool = False):
             except subprocess.CalledProcessError as e:
                 print(f"⚠️ Failed to download spaCy model: {e}. NLP features might be limited.")
         else:
-            print("⚠️ spaCy model 'en_core_web_sm' not found. Ensure it's part of your deployment build process. NLP features might be limited.")
+            print("❌ spaCy model 'en_core_web_sm' not found. This should have been downloaded during the Docker build process. Please check the Dockerfile and build logs.")
+            # Depending on strictness, you might sys.exit(1) here too. For now, warning.
+            print("   NLP features might be limited or non-functional.")
 
 def check_environment_variables():
     """Check if essential environment variables are configured."""
@@ -92,10 +93,42 @@ def start_server():
 
     try:
         import uvicorn
-        print(f"   Uvicorn command: uvicorn {' '.join(uvicorn_args)}")
-        uvicorn.run(*uvicorn_args)
+        print(f"   Uvicorn command: uvicorn main:app {' '.join(uvicorn_args[1:])}") # Corrected for display
+        # uvicorn.run takes the app string directly, then kwargs or list for other args.
+        # However, uvicorn.run("main:app", host=host, port=port, workers=workers, reload=True/False) is more typical.
+        # Let's stick to the list for now but construct it carefully.
+        
+        app_module_str = uvicorn_args[0] # "main:app"
+        run_kwargs = {}
+        
+        # Parse existing uvicorn_args into kwargs for uvicorn.run()
+        i = 1
+        while i < len(uvicorn_args):
+            if uvicorn_args[i].startswith('--'):
+                key = uvicorn_args[i][2:].replace('-', '_')
+                if i + 1 < len(uvicorn_args) and not uvicorn_args[i+1].startswith('--'):
+                    # Argument with a value
+                    value_str = uvicorn_args[i+1]
+                    # Attempt to convert to int if it's a port or workers
+                    if key == "port" or key == "workers":
+                        try:
+                            run_kwargs[key] = int(value_str)
+                        except ValueError:
+                            run_kwargs[key] = value_str # Keep as string if not int
+                    else:
+                        run_kwargs[key] = value_str
+                    i += 2
+                else:
+                    # Boolean flag like --reload
+                    run_kwargs[key] = True
+                    i += 1
+            else: # Should not happen if uvicorn_args is well-formed
+                i += 1
+
+        uvicorn.run(app_module_str, **run_kwargs)
+
     except ImportError:
-        print("❌ uvicorn not found. Please ensure it's in requirements.txt and installed.")
+        print("❌ uvicorn not found. Please ensure it's in requirements.txt and installed. This should have been handled by the Docker build.")
         sys.exit(1)
     except Exception as e:
         print(f"❌ Failed to start Uvicorn server: {e}")
