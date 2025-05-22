@@ -12,13 +12,17 @@ A powerful tool that analyzes job postings to extract the most frequently mentio
 ## 🚀 **Quick Start**
 
 ```bash
-# 1. Start Backend
+# 1. Setup environment (optional - for live data)
+cp backend/env.example backend/.env
+# Edit backend/.env with your RapidAPI key
+
+# 2. Start Backend
 cd backend && python start.py
 
-# 2. Start Frontend (new terminal)
+# 3. Start Frontend (new terminal)
 npm run dev
 
-# 3. Open http://localhost:5173
+# 4. Open http://localhost:5173
 ```
 
 ## 📚 **Documentation**
