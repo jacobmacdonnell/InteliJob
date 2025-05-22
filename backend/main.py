@@ -9,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+# Import settings from config.py
+from config import settings
+
 # Load environment variables
 load_dotenv()
 
@@ -18,7 +21,7 @@ app = FastAPI(title="Job Intelligence Scanner API", version="1.0.0")
 # Add CORS middleware for frontend connectivity
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev servers
+    allow_origins=settings.cors_origins, # Use origins from config
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,9 +51,10 @@ class JobAnalysisResponse(BaseModel):
     data: Optional[Dict[str, Any]] = None
     jobs_analyzed: int = 0
 
-# Configuration
-JSEARCH_API_URL = "https://jsearch.p.rapidapi.com/search"
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "")
+# Configuration - Use settings from config.py
+JSEARCH_API_URL = settings.jsearch_api_url
+RAPIDAPI_KEY = settings.rapidapi_key # Ensures consistency with config
+# Note: RAPIDAPI_KEY is also checked by settings.is_rapidapi_configured()
 
 # Predefined certification patterns (case-insensitive)
 CERTIFICATION_PATTERNS = [

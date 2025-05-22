@@ -1,96 +1,127 @@
 #!/usr/bin/env python3
 """
 Startup script for Job Intelligence Scanner Backend
-Handles dependency installation and server startup
+Optimized for both development and production deployment.
 """
 
 import sys
 import subprocess
 import os
 from pathlib import Path
+from config import settings # Import settings
 
-def install_dependencies():
-    """Install required Python packages"""
-    print("📦 Installing Python dependencies...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-        print("✅ Dependencies installed successfully")
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Failed to install dependencies: {e}")
-        return False
-    return True
-
-def install_spacy_model():
-    """Install spaCy English model"""
-    print("🧠 Installing spaCy English model...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
-        print("✅ spaCy model installed successfully")
-    except subprocess.CalledProcessError as e:
-        print(f"⚠️  Failed to install spaCy model: {e}")
-        print("The API will work without spaCy but with reduced NLP capabilities")
-        return False
-    return True
-
-def check_environment():
-    """Check if environment is properly configured"""
-    rapidapi_key = os.getenv("RAPIDAPI_KEY")
+def ensure_dependencies_and_model(install_if_missing: bool = False):
+    """
+    Check if dependencies and spaCy model are present.
+    Optionally install them if install_if_missing is True (for local dev).
+    """
+    print("🔍 Checking dependencies and spaCy model...")
     
-    if not rapidapi_key:
-        print("⚠️  RAPIDAPI_KEY environment variable not set")
-        print("📝 To use the JSearch API, you need to:")
-        print("   1. Get a free API key from: https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch/")
-        print("   2. Set the environment variable: export RAPIDAPI_KEY=your_key_here")
-        print("   3. Or create a .env file with: RAPIDAPI_KEY=your_key_here")
-        return False
-    
-    print("✅ Environment configuration looks good")
-    return True
+    # Check for a key dependency to infer if requirements are met
+    try:
+        import fastapi
+    except ImportError:
+        if install_if_missing:
+            print("📦 FastAPI not found. Installing Python dependencies...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+                print("✅ Dependencies installed successfully.")
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Failed to install dependencies: {e}")
+                sys.exit(1)
+        else:
+            print("⚠️ Key dependency (FastAPI) not found. Run with --install-deps or ensure requirements.txt is processed by your deployment platform.")
+            # In a production environment, we might not want to exit here if the platform handles it
+            # For now, we'll allow it to proceed, Uvicorn will fail if FastAPI isn't there.
+
+    # Check for spaCy model
+    try:
+        import spacy
+        spacy.load("en_core_web_sm")
+        print("✅ spaCy model 'en_core_web_sm' found.")
+    except (ImportError, IOError):
+        if install_if_missing:
+            print("🧠 spaCy model 'en_core_web_sm' not found. Downloading...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
+                print("✅ spaCy model downloaded successfully.")
+            except subprocess.CalledProcessError as e:
+                print(f"⚠️ Failed to download spaCy model: {e}. NLP features might be limited.")
+        else:
+            print("⚠️ spaCy model 'en_core_web_sm' not found. Ensure it's part of your deployment build process. NLP features might be limited.")
+
+def check_environment_variables():
+    """Check if essential environment variables are configured."""
+    print("🔍 Checking environment variables...")
+    if not settings.is_rapidapi_configured():
+        print("⚠️  RAPIDAPI_KEY environment variable not set or is a placeholder.")
+        print("   JSearch API integration will be disabled. Live job data will not be available.")
+        print("   To enable, set RAPIDAPI_KEY in your environment or .env file.")
+    else:
+        print("✅ RAPIDAPI_KEY is configured.")
+    return True # Continue regardless for now
 
 def start_server():
-    """Start the FastAPI server"""
+    """Start the FastAPI server using Uvicorn, configured for the environment."""
     print("🚀 Starting Job Intelligence Scanner API...")
+    
+    host = settings.host
+    port = settings.port
+    
+    uvicorn_args = [
+        "main:app",
+        "--host", host,
+        "--port", str(port)
+    ]
+
+    if settings.is_production():
+        print("   Running in PRODUCTION mode.")
+        # Add production-specific Uvicorn settings
+        workers = os.getenv("WEB_CONCURRENCY", None) # Standard for Heroku, Render etc.
+        if workers:
+             uvicorn_args.extend(["--workers", str(workers)])
+        else:
+            # Default to a sensible number if not specified, e.g., based on CPU cores
+            # For simplicity, we'll let Uvicorn use its default (1 worker) if not set
+            print("   WEB_CONCURRENCY not set, Uvicorn will use its default worker count (usually 1).")
+        # Ensure reload is OFF for production
+        # uvicorn_args.append("--no-reload") # Uvicorn's default is no-reload
+    else:
+        print("   Running in DEVELOPMENT mode with reload enabled.")
+        uvicorn_args.append("--reload")
+
     try:
         import uvicorn
-        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+        print(f"   Uvicorn command: uvicorn {' '.join(uvicorn_args)}")
+        uvicorn.run(*uvicorn_args)
     except ImportError:
-        print("❌ uvicorn not found. Installing...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "uvicorn[standard]"])
-        import uvicorn
-        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+        print("❌ uvicorn not found. Please ensure it's in requirements.txt and installed.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Failed to start Uvicorn server: {e}")
+        sys.exit(1)
 
 def main():
-    """Main startup function"""
-    print("🔍 Job Intelligence Scanner Backend Setup")
+    """Main startup function."""
+    print("✨ Job Intelligence Scanner Backend Startup ✨")
     print("=" * 45)
     
-    # Change to backend directory
     backend_dir = Path(__file__).parent
-    os.chdir(backend_dir)
+    os.chdir(backend_dir) # Ensure we are in the backend directory
     
-    # Install dependencies
-    if not install_dependencies():
-        sys.exit(1)
+    # Handle command-line arguments for local development
+    install_deps_locally = "--install-deps" in sys.argv
     
-    # Install spaCy model (optional)
-    install_spacy_model()
-    
-    # Check environment
-    env_ok = check_environment()
-    if not env_ok:
-        print("\n⚠️  API will run with limited functionality without RapidAPI key")
-        response = input("Continue anyway? (y/N): ").strip().lower()
-        if response != 'y':
-            print("Setup cancelled. Please configure your environment and try again.")
-            sys.exit(1)
+    ensure_dependencies_and_model(install_if_missing=install_deps_locally)
+    check_environment_variables()
     
     print("\n" + "=" * 45)
-    print("🎉 Setup complete! Starting server...")
-    print("📡 API will be available at: http://localhost:8000")
-    print("📖 API docs will be available at: http://localhost:8000/docs")
+    print(f"🎉 Setup checks complete. Starting API server...")
+    print(f"   Environment: {settings.environment}")
+    print(f"   API will be available at: http://{settings.host}:{settings.port}")
+    print(f"   API docs (if not disabled in prod): http://{settings.host}:{settings.port}/docs")
     print("=" * 45)
     
-    # Start the server
     start_server()
 
 if __name__ == "__main__":
