@@ -38,10 +38,18 @@ npm run dev
 
 ✅ Backend with spaCy NLP working  
 ✅ Frontend with React + dark theme  
-✅ Complete test suite (3/3 passing)  
+✅ Complete test suite (5/5 passing)  
 ✅ Production deployment ready  
 
 **Only missing**: RapidAPI key for live job data
+
+## ✅ **Verify Setup**
+
+Run the end-to-end test:
+```bash
+cd backend && python test_e2e.py
+```
+Should show: **5/5 tests passed** ✅
 
 ## 🛠️ **Tech Stack**
 

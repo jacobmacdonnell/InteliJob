@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Backend Server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/start.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/backend",
+            "python": "${workspaceFolder}/backend/venv/bin/python",
+            "envFile": "${workspaceFolder}/backend/.env"
+        },
+        {
+            "name": "Python: E2E Tests", 
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/test_e2e.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/backend",
+            "python": "${workspaceFolder}/backend/venv/bin/python"
+        },
+        {
+            "name": "Python: API Tests",
+            "type": "python", 
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/test_api.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/backend",
+            "python": "${workspaceFolder}/backend/venv/bin/python"
+        }
+    ]
+} 

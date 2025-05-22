@@ -1,0 +1,25 @@
+{
+    "python.defaultInterpreter": "./backend/venv/bin/python",
+    "python.pythonPath": "./backend/venv/bin/python", 
+    "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/backend/.env",
+    "pylint.path": ["./backend/venv/bin/pylint"],
+    "python.analysis.extraPaths": [
+        "./backend",
+        "./backend/venv/lib/python3.9/site-packages"
+    ],
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.useLibraryCodeForTypes": true,
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/venv": true,
+        "**/__pycache__": true,
+        "**/.git": true,
+        "**/.DS_Store": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/venv": true,
+        "**/__pycache__": true
+    }
+} 

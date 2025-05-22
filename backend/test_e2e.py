@@ -151,18 +151,18 @@ def test_environment_setup():
     """Test environment and dependencies"""
     print_status("Testing environment setup...", "info")
     
-    # Check if we're in the right directory
-    if not Path("package.json").exists() or not Path("backend/main.py").exists():
+    # Check if we're in the backend directory with proper project structure
+    if not Path("main.py").exists() or not Path("../package.json").exists():
         print_status("Not in the correct project directory", "error")
         return False
     
     # Check if backend dependencies are in place
-    if not Path("backend/venv").exists():
+    if not Path("venv").exists():
         print_status("Backend virtual environment not found", "error")
         return False
     
     # Check if frontend dependencies are in place
-    if not Path("node_modules").exists():
+    if not Path("../node_modules").exists():
         print_status("Frontend dependencies not installed", "error")
         return False
     
