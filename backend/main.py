@@ -18,10 +18,11 @@ load_dotenv()
 # Initialize FastAPI app
 app = FastAPI(title="Job Intelligence Scanner API", version="1.0.0")
 
-# Add CORS middleware for frontend connectivity
+# CORS Middleware
+print(f"DEBUG: CORS Origins loaded by FastAPI app: {settings.cors_origins}")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins, # Use origins from config
+    allow_origins=settings.cors_origins, # Use the loaded setting
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
