@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Startup script for Job Intelligence Scanner Backend
+Startup script for InteliJob Backend
 Optimized for both development and production deployment.
 """
 
@@ -64,7 +64,7 @@ def check_environment_variables():
 
 def start_server():
     """Start the FastAPI server using Uvicorn, configured for the environment."""
-    print("🚀 Starting Job Intelligence Scanner API...")
+    print("🚀 Starting InteliJob API...")
     
     host = settings.host
     port = settings.port
@@ -136,7 +136,7 @@ def start_server():
 
 def main():
     """Main startup function."""
-    print("✨ Job Intelligence Scanner Backend Startup ✨")
+    print("✨ InteliJob Backend Startup ✨")
     print("=" * 45)
     
     backend_dir = Path(__file__).parent

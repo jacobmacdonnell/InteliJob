@@ -1,6 +1,6 @@
-# Job Intelligence Scanner - Documentation 📚
+# InteliJob - Documentation 📚
 
-Welcome to the complete documentation for the Job Intelligence Scanner project.
+Welcome to the complete documentation for the InteliJob project.
 
 ## 📋 **Documentation Index**
 

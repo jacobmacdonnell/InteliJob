@@ -1,4 +1,4 @@
-# ✅ Job Intelligence Scanner - Setup Complete!
+# ✅ InteliJob - Setup Complete!
 
 ## 🎉 What's Been Implemented
 

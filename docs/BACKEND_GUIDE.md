@@ -1,4 +1,4 @@
-# Job Intelligence Scanner Backend
+# InteliJob Backend
 
 A FastAPI-based backend service that analyzes job postings to extract trending skills, certifications, and experience requirements using NLP and regex pattern matching.
 
@@ -275,4 +275,4 @@ curl -X POST "http://localhost:8000/analyze-jobs" \
 
 ## License
 
-This backend is part of the Job Intelligence Scanner MVP project. 
+This backend is part of the InteliJob MVP project. 

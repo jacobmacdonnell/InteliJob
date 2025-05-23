@@ -1,4 +1,4 @@
-# Job Intelligence Scanner - Complete Setup & Deployment Guide 🚀
+# InteliJob - Complete Setup & Deployment Guide 🚀
 
 This is your **one-stop guide** for everything from development setup to production deployment.
 

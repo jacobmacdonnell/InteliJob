@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-End-to-End Test Suite for Job Intelligence Scanner
+End-to-End Test Suite for InteliJob
 Tests the complete application stack including backend API and frontend accessibility
 """
 
@@ -59,7 +59,7 @@ def test_frontend_accessibility():
     try:
         response = requests.get(FRONTEND_URL, timeout=5)
         if response.status_code == 200:
-            if "Job Intelligence Scanner" in response.text or "html" in response.text.lower():
+            if "InteliJob" in response.text or "html" in response.text.lower():
                 print_status("Frontend is accessible", "success")
                 return True
             else:
@@ -171,7 +171,7 @@ def test_environment_setup():
 
 def main():
     """Run all tests"""
-    print(f"{Colors.BOLD}🧪 Job Intelligence Scanner - End-to-End Test Suite{Colors.ENDC}")
+    print(f"{Colors.BOLD}🧪 InteliJob - End-to-End Test Suite{Colors.ENDC}")
     print("=" * 60)
     
     tests = [
@@ -198,7 +198,7 @@ def main():
     print(f"{Colors.BOLD}🏁 Test Results: {passed}/{total} tests passed{Colors.ENDC}")
     
     if passed == total:
-        print_status("🎉 All tests passed! Your Job Intelligence Scanner is fully operational.", "success")
+        print_status("🎉 All tests passed! Your InteliJob is fully operational.", "success")
         print("\n🔗 Access your application:")
         print(f"   Frontend: {FRONTEND_URL}")
         print(f"   Backend API: {BACKEND_URL}/docs")

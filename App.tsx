@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Box,
@@ -30,7 +29,7 @@ const AppContent: React.FC = () => {
       <VStack as="header" spacing={2} mb={10} textAlign="center">
         <SearchDocIcon w={16} h={16} color="teal.500" />
         <Heading as="h1" size="2xl" color="teal.400">
-          Job Intelligence Scanner
+          InteliJob
         </Heading>
         <Text color="gray.400" mt={2} fontSize="lg">
           Uncover key requirements from job postings.
@@ -64,7 +63,7 @@ const AppContent: React.FC = () => {
       </Container>
 
       <Box as="footer" mt={16} textAlign="center" color="gray.500" fontSize="sm">
-        <Text>&copy; {new Date().getFullYear()} Job Intelligence Scanner. All rights reserved.</Text>
+        <Text>&copy; {new Date().getFullYear()} InteliJob. All rights reserved.</Text>
         <Text fontSize="xs" mt={1}>Data presented is for demonstration purposes (mocked).</Text>
       </Box>
     </Box>

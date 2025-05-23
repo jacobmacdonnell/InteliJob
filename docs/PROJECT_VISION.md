@@ -1,4 +1,4 @@
-# Job Intelligence Scanner - Original MVP Vision 🚧 **CODE COMPLETE, NOT TESTED**
+# InteliJob - Original MVP Vision 🚧 **CODE COMPLETE, NOT TESTED**
 
 ## 🎯 **MVP Goal**
 To create a functional tool that allows a user to enter a job title (with optional location and date filters) and receive a simple report listing the most frequently mentioned certifications, technical skills, and years of experience extracted from live job postings. The application will feature a default dark theme with teal accent colors.

@@ -1,6 +1,6 @@
-# Job Intelligence Scanner - Quick Start 🚀
+# InteliJob - Quick Start 🚀
 
-Get your Job Intelligence Scanner running in 3 steps!
+Get your InteliJob running in 3 steps!
 
 ## 🎯 Prerequisites
 
@@ -55,7 +55,7 @@ For comprehensive guides, troubleshooting, and deployment:
 
 ## 🎉 That's It!
 
-Your Job Intelligence Scanner should now be running with:
+Your InteliJob should now be running with:
 - ✅ **FastAPI backend** with spaCy NLP (Port 8000)
 - ✅ **React frontend** with Chakra UI (Port 5173)
 - ✅ **Live job analysis** (with API key)

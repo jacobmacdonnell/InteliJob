@@ -1,5 +1,5 @@
 {
-  "name": "Job Intelligence Scanner",
+  "name": "InteliJob",
   "description": "A tool to scan job postings (using mocked data for this version) and identify key certifications, skills, and experience requirements. Features a dark theme with teal accents.",
   "requestFramePermissions": [],
   "prompt": ""

@@ -1,4 +1,4 @@
-# Job Intelligence Scanner 🔍
+# InteliJob 🔍
 
 A powerful tool that analyzes job postings to extract the most frequently mentioned skills, certifications, and experience requirements using live job data and advanced NLP processing.
 

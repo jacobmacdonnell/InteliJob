@@ -22,7 +22,7 @@ from config import settings
 load_dotenv()
 
 # Initialize FastAPI app
-app = FastAPI(title="Job Intelligence Scanner API", version="1.0.0")
+app = FastAPI(title="InteliJob API", version="1.0.0")
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address, 
@@ -268,7 +268,7 @@ def aggregate_and_rank(items: List[str], top_n: int = 10) -> List[Dict[str, Any]
 @limiter.exempt
 async def root():
     """Health check endpoint"""
-    return {"message": "Job Intelligence Scanner API", "status": "running"}
+    return {"message": "InteliJob API", "status": "running"}
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
 @limiter.limit(settings.rate_limit_default)

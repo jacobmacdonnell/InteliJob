@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple test script for the Job Intelligence Scanner API
+Simple test script for the InteliJob API
 Tests the backend without requiring a RapidAPI key
 """
 
@@ -81,7 +81,7 @@ def test_root_endpoint():
 
 def main():
     """Run all tests"""
-    print("🧪 Job Intelligence Scanner API Tests")
+    print("🧪 InteliJob API Tests")
     print("=" * 50)
     
     tests = [
