@@ -25,8 +25,8 @@
 
     # Permissions-Policy allows you to control which browser features can be used by the page.
     # It's good practice to disable features not in use. This is a restrictive example; adjust as needed.
-    # Example: disable microphone, geolocation, camera by default.
-    Permissions-Policy = "microphone=(), geolocation=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), sync-xhr=()"
+    # Allow geolocation for location-based job search functionality.
+    Permissions-Policy = "microphone=(), geolocation=self, camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), sync-xhr=()"
 
     # Content-Security-Policy (CSP) helps prevent XSS and data injection attacks.
     # This is a STARTER policy. It needs to be carefully configured and tested.
