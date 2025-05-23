@@ -64,7 +64,7 @@ const AppContent: React.FC = () => {
 
       <Box as="footer" mt={16} textAlign="center" color="gray.500" fontSize="sm">
         <Text>&copy; {new Date().getFullYear()} InteliJob. All rights reserved.</Text>
-        <Text fontSize="xs" mt={1}>Data presented is for demonstration purposes (mocked).</Text>
+        <Text fontSize="xs" mt={1}>This app is in beta testing.</Text>
       </Box>
     </Box>
   );
