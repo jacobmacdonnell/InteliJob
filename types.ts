@@ -1,14 +1,20 @@
-
 export interface JobCriteria {
   job_title: string;
   location?: string;
   time_range?: string;
 }
 
+export interface JobSource {
+  job: string;
+  company: string;
+  job_url?: string;
+}
+
 export interface ExtractedItem {
   name: string;
   count: number;
   percentage: number;
+  sources?: JobSource[];
 }
 
 export interface ReportSection {

@@ -98,6 +98,8 @@ def get_mock_jobs(job_title: str, location: str = None) -> List[Dict]:
     if "software" in job_title_lower or "developer" in job_title_lower or "engineer" in job_title_lower:
         return [
             {
+                "job_title": "Senior Software Engineer",
+                "company": "TechCorp Inc",
                 "job_description": """
                 We are seeking a Senior Software Engineer with 5+ years of experience in Python, React, and AWS. 
                 The ideal candidate will have experience with Docker, Kubernetes, and microservices architecture.
@@ -107,6 +109,8 @@ def get_mock_jobs(job_title: str, location: str = None) -> List[Dict]:
                 """
             },
             {
+                "job_title": "Full Stack Developer",
+                "company": "StartupXYZ",
                 "job_description": """
                 Looking for a Full Stack Developer proficient in JavaScript, React, Node.js, and MongoDB. 
                 Must have 2+ years of experience with modern web frameworks and RESTful APIs. 
@@ -116,6 +120,8 @@ def get_mock_jobs(job_title: str, location: str = None) -> List[Dict]:
                 """
             },
             {
+                "job_title": "Python Developer",
+                "company": "FinTech Solutions",
                 "job_description": """
                 Senior Python Developer needed for fintech startup. 5-7 years experience required.
                 Strong background in Django, Flask, PostgreSQL, and Redis. Experience with Docker,
@@ -125,6 +131,8 @@ def get_mock_jobs(job_title: str, location: str = None) -> List[Dict]:
                 """
             },
             {
+                "job_title": "DevOps Engineer",
+                "company": "CloudFirst Ltd",
                 "job_description": """
                 DevOps Engineer position requiring expertise in Terraform, Ansible, Docker, and Kubernetes.
                 3+ years experience with CI/CD pipelines using Jenkins or GitLab CI. 
@@ -134,12 +142,47 @@ def get_mock_jobs(job_title: str, location: str = None) -> List[Dict]:
                 """
             },
             {
+                "job_title": "Frontend Developer",
+                "company": "Digital Agency Pro",
                 "job_description": """
                 Front-end Developer role focusing on React, TypeScript, and modern JavaScript.
                 2-4 years experience with responsive web design and cross-browser compatibility.
                 Experience with state management (Redux, Context API), testing frameworks (Jest, Cypress),
                 and build tools (Webpack, Vite). Knowledge of CSS preprocessors and UI libraries.
                 Bachelor's degree and 2+ years of frontend development experience required.
+                """
+            },
+            {
+                "job_title": "Backend Engineer",
+                "company": "ScaleUp Tech",
+                "job_description": """
+                Backend Engineer with expertise in Node.js, Express, and database design.
+                4+ years experience with microservices, API development, and system architecture.
+                Proficiency in PostgreSQL, MongoDB, Redis, and cloud platforms (AWS, GCP).
+                Experience with containerization (Docker), orchestration (Kubernetes), and CI/CD.
+                Strong understanding of security best practices and performance optimization.
+                """
+            },
+            {
+                "job_title": "Software Engineer II",
+                "company": "Enterprise Corp",
+                "job_description": """
+                Mid-level Software Engineer position requiring 3+ years experience in Java, Spring Boot.
+                Experience with microservices architecture, REST APIs, and database management.
+                Knowledge of AWS services, Docker, and Kubernetes for cloud deployment.
+                Familiarity with Agile methodologies and modern development practices.
+                Bachelor's degree in Computer Science and 3-5 years relevant experience.
+                """
+            },
+            {
+                "job_title": "Mobile Developer",
+                "company": "AppStudio Inc",
+                "job_description": """
+                React Native Developer with 2+ years experience building cross-platform applications.
+                Proficiency in JavaScript, TypeScript, and mobile app development best practices.
+                Experience with native iOS/Android development, app store deployment processes.
+                Knowledge of state management, testing frameworks, and performance optimization.
+                Bachelor's degree and 2-4 years of mobile development experience required.
                 """
             }
         ]
@@ -323,7 +366,7 @@ async def fetch_jobs_from_jsearch(job_title: str, location: str = None, date_pos
     params = {
         "query": job_title,
         "page": "1",
-        "num_pages": "1",
+        "num_pages": "2",  # Increased from 1 to 2 for more jobs (usually 20-30 total)
         "date_posted": date_posted,
     }
     
@@ -359,8 +402,8 @@ def clean_job_description(description: str) -> str:
     
     return description.strip()
 
-def extract_certifications(text: str) -> List[str]:
-    """Extract certifications using regex patterns"""
+def extract_certifications_with_sources(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
+    """Extract certifications with job source information"""
     certifications = []
     text_lower = text.lower()
     
@@ -369,12 +412,17 @@ def extract_certifications(text: str) -> List[str]:
         for match in matches:
             cert = match.group().strip()
             if cert and len(cert) > 2:
-                certifications.append(cert)
+                certifications.append({
+                    "name": cert,
+                    "source_job": f"{job_title} at {company}",
+                    "company": company,
+                    "job_url": job_url
+                })
     
-    return list(set(certifications))
+    return certifications
 
-def extract_technical_skills(text: str) -> List[str]:
-    """Extract technical skills using both NLP and keyword matching"""
+def extract_technical_skills_with_sources(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
+    """Extract technical skills with job source information"""
     skills = []
     text_lower = text.lower()
     
@@ -382,7 +430,12 @@ def extract_technical_skills(text: str) -> List[str]:
     for skill in TECH_SKILLS_KEYWORDS:
         skill_pattern = r'\b' + re.escape(skill.lower()) + r'\b'
         if re.search(skill_pattern, text_lower):
-            skills.append(skill.title())
+            skills.append({
+                "name": skill.title(),
+                "source_job": f"{job_title} at {company}",
+                "company": company,
+                "job_url": job_url
+            })
     
     # NLP-based extraction if spaCy is available
     if nlp:
@@ -392,12 +445,17 @@ def extract_technical_skills(text: str) -> List[str]:
                 # Filter for tech-related entities
                 ent_lower = ent.text.lower()
                 if any(tech_word in ent_lower for tech_word in ['tech', 'soft', 'program', 'develop', 'data', 'web', 'mobile', 'cloud']):
-                    skills.append(ent.text.title())
+                    skills.append({
+                        "name": ent.text.title(),
+                        "source_job": f"{job_title} at {company}",
+                        "company": company,
+                        "job_url": job_url
+                    })
     
-    return list(set(skills))
+    return skills
 
-def extract_experience_years(text: str) -> List[str]:
-    """Extract years of experience using regex patterns"""
+def extract_experience_with_sources(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
+    """Extract years of experience with job source information"""
     experience_requirements = []
     
     for pattern in EXPERIENCE_PATTERNS:
@@ -405,23 +463,59 @@ def extract_experience_years(text: str) -> List[str]:
         for match in matches:
             exp_text = match.group().strip()
             if exp_text:
-                experience_requirements.append(exp_text)
+                experience_requirements.append({
+                    "name": exp_text,
+                    "source_job": f"{job_title} at {company}",
+                    "company": company,
+                    "job_url": job_url
+                })
     
-    return list(set(experience_requirements))
+    return experience_requirements
 
-def aggregate_and_rank(items: List[str], top_n: int = 10) -> List[Dict[str, Any]]:
-    """Aggregate items by frequency and return top N"""
+def aggregate_and_rank_with_sources(items: List[Dict], top_n: int = 10) -> List[Dict[str, Any]]:
+    """Aggregate items by frequency and return top N with source job information"""
     if not items:
         return []
     
-    counter = Counter(items)
+    # Group by item name
+    item_groups = {}
+    for item in items:
+        name = item["name"]
+        if name not in item_groups:
+            item_groups[name] = {
+                "name": name,
+                "count": 0,
+                "sources": []
+            }
+        item_groups[name]["count"] += 1
+        item_groups[name]["sources"].append({
+            "job": item["source_job"],
+            "company": item["company"],
+            "job_url": item.get("job_url")
+        })
+    
+    # Sort by count and get top N
+    sorted_items = sorted(item_groups.values(), key=lambda x: x["count"], reverse=True)[:top_n]
+    
+    # Calculate percentages and format
+    total_items = len(items)
     ranked_items = []
     
-    for item, count in counter.most_common(top_n):
+    for item in sorted_items:
+        # Remove duplicate sources
+        unique_sources = []
+        seen_sources = set()
+        for source in item["sources"]:
+            source_key = f"{source['job']}-{source['company']}"
+            if source_key not in seen_sources:
+                unique_sources.append(source)
+                seen_sources.add(source_key)
+        
         ranked_items.append({
-            "name": item,
-            "count": count,
-            "percentage": round((count / len(items)) * 100, 1)
+            "name": item["name"],
+            "count": item["count"],
+            "percentage": round((item["count"] / total_items) * 100, 1),
+            "sources": unique_sources[:5]  # Limit to 5 sources for UI performance
         })
     
     return ranked_items
@@ -474,19 +568,23 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
                 
             cleaned_description = clean_job_description(description)
             
+            # Get actual job details for source tracking
+            actual_job_title = job.get("job_title", "Job Posting")
+            company_name = job.get("company", job.get("employer_name", "Company"))
+            
             # Extract certifications, skills, and experience
-            certifications = extract_certifications(cleaned_description)
-            skills = extract_technical_skills(cleaned_description)
-            experience = extract_experience_years(cleaned_description)
+            certifications = extract_certifications_with_sources(cleaned_description, actual_job_title, company_name, job.get("job_url"))
+            skills = extract_technical_skills_with_sources(cleaned_description, actual_job_title, company_name, job.get("job_url"))
+            experience = extract_experience_with_sources(cleaned_description, actual_job_title, company_name, job.get("job_url"))
             
             all_certifications.extend(certifications)
             all_skills.extend(skills)
             all_experience.extend(experience)
         
         # Aggregate and rank results
-        top_certifications = aggregate_and_rank(all_certifications, 10)
-        top_skills = aggregate_and_rank(all_skills, 15)
-        top_experience = aggregate_and_rank(all_experience, 8)
+        top_certifications = aggregate_and_rank_with_sources(all_certifications, 10)
+        top_skills = aggregate_and_rank_with_sources(all_skills, 15)
+        top_experience = aggregate_and_rank_with_sources(all_experience, 8)
         
         analysis_data = {
             "certifications": top_certifications,

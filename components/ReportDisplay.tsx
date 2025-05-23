@@ -3,8 +3,6 @@ import {
   Box,
   Heading,
   Text,
-  List,
-  ListItem,
   VStack,
   HStack,
   Badge,
@@ -22,12 +20,6 @@ import {
   Icon,
   Button,
   Flex,
-  Grid,
-  GridItem,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
   Tooltip,
   IconButton,
   useDisclosure,
@@ -41,6 +33,7 @@ import {
   FormControl,
   FormLabel,
   Divider,
+  Collapse,
 } from '@chakra-ui/react';
 import { 
   SearchIcon, 
@@ -49,7 +42,10 @@ import {
   TriangleUpIcon,
   TriangleDownIcon,
   InfoIcon,
-  SettingsIcon
+  SettingsIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  ExternalLinkIcon
 } from '@chakra-ui/icons';
 import type { ReportData, ReportSection, ExtractedItem } from '../types';
 import { AnalyticsInsights } from './AnalyticsInsights';
@@ -84,6 +80,71 @@ const AnalyticsIcon = (props: any) => (
     <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8M21 7h-4v4" />
   </Icon>
 );
+
+const JobSourcesDisplay: React.FC<{ item: ExtractedItem }> = ({ item }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const sourceBg = useColorModeValue('gray.50', 'gray.700');
+  const sourceTextColor = useColorModeValue('gray.700', 'gray.200');
+  const companyColor = useColorModeValue('blue.600', 'blue.300');
+  const buttonTextColor = useColorModeValue('blue.600', 'blue.300');
+  
+  if (!item.sources || item.sources.length === 0) {
+    return null;
+  }
+
+  return (
+    <Box mt={2}>
+      <Button
+        size="xs"
+        variant="ghost"
+        leftIcon={isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+        onClick={() => setIsExpanded(!isExpanded)}
+        color={buttonTextColor}
+        fontWeight="normal"
+        px={0}
+        py={1}
+        h="auto"
+        fontSize="xs"
+        _hover={{ color: useColorModeValue('blue.700', 'blue.200') }}
+      >
+        {item.sources.length} source{item.sources.length > 1 ? 's' : ''}
+      </Button>
+      
+      <Collapse in={isExpanded} animateOpacity>
+        <Box mt={2} bg={sourceBg} borderRadius="sm" p={2}>
+          <VStack spacing={1} align="stretch">
+            {item.sources.map((source, index) => {
+              const jobTitle = source.job.replace(` at ${source.company}`, '');
+              const jobUrl = source.job_url || null;
+              
+              return (
+                <HStack
+                  key={index}
+                  spacing={2}
+                  py={1}
+                  cursor={jobUrl ? 'pointer' : 'default'}
+                  onClick={jobUrl ? () => window.open(jobUrl, '_blank') : undefined}
+                  _hover={jobUrl ? { color: companyColor } : {}}
+                >
+                  <Box w={2} h={2} borderRadius="full" bg="blue.400" flexShrink={0} />
+                  <Text fontSize="xs" color={companyColor} fontWeight="medium" minW="80px">
+                    {source.company}
+                  </Text>
+                  <Text fontSize="xs" color={sourceTextColor} flex={1} noOfLines={1}>
+                    {jobTitle}
+                  </Text>
+                  {jobUrl && (
+                    <ExternalLinkIcon w={3} h={3} color="blue.400" />
+                  )}
+                </HStack>
+              );
+            })}
+          </VStack>
+        </Box>
+      </Collapse>
+    </Box>
+  );
+};
 
 const SectionCard: React.FC<{ 
   section: ReportSection; 
@@ -159,37 +220,37 @@ const SectionCard: React.FC<{
 
   if (!section || section.items.length === 0) {
     return (
-      <Box bg={cardBg} p={8} borderRadius="xl" boxShadow="lg" textAlign="center">
-        <Icon as={InfoIcon} w={12} h={12} color="gray.400" mb={4} />
-        <Heading as="h3" size="lg" color={titleColor} mb={3}>
+      <Box bg={cardBg} p={6} borderRadius="xl" boxShadow="lg" textAlign="center">
+        <Icon as={InfoIcon} w={10} h={10} color={useColorModeValue('gray.400', 'gray.500')} mb={3} />
+        <Heading as="h3" size="md" color={titleColor} mb={2}>
           {section?.title || 'No Data Available'}
         </Heading>
-        <Text color={mutedColor}>No specific data found for this section.</Text>
+        <Text color={mutedColor} fontSize="sm">No specific data found for this section.</Text>
       </Box>
     );
   }
 
   return (
-    <Box bg={cardBg} borderRadius="xl" boxShadow="xl" overflow="hidden">
+    <Box bg={cardBg} borderRadius="lg" boxShadow="lg" overflow="hidden">
       {/* Header */}
-      <Box p={6} borderBottomWidth="1px" borderColor={borderColor} bg={useColorModeValue('white', 'gray.750')}>
-        <Flex justify="space-between" align="center" mb={4}>
-          <HStack spacing={3}>
-            <ChartIcon w={6} h={6} color={titleColor} />
-            <Heading as="h3" size="lg" color={titleColor}>
+      <Box p={4} borderBottomWidth="1px" borderColor={borderColor} bg={useColorModeValue('white', 'gray.750')}>
+        <Flex justify="space-between" align="center" mb={3}>
+          <HStack spacing={2}>
+            <ChartIcon w={5} h={5} color={titleColor} />
+            <Heading as="h3" size="md" color={titleColor}>
               {section.title}
             </Heading>
-            <Badge colorScheme="teal" variant="subtle">
+            <Badge colorScheme="teal" variant="subtle" size="sm">
               {filteredItems.length} items
             </Badge>
           </HStack>
           
-          <HStack spacing={2}>
+          <HStack spacing={1}>
             <Tooltip label="Filter & Sort">
               <IconButton
                 aria-label="Filter"
                 icon={<SettingsIcon />}
-                size="sm"
+                size="xs"
                 variant="ghost"
                 onClick={onOpen}
               />
@@ -198,7 +259,7 @@ const SectionCard: React.FC<{
               <IconButton
                 aria-label="Export"
                 icon={<DownloadIcon />}
-                size="sm"
+                size="xs"
                 variant="ghost"
                 onClick={exportData}
               />
@@ -209,7 +270,7 @@ const SectionCard: React.FC<{
         {/* Quick Search */}
         <InputGroup size="sm">
           <InputLeftElement>
-            <SearchIcon color="gray.400" />
+            <SearchIcon color={useColorModeValue('gray.400', 'gray.500')} />
           </InputLeftElement>
           <Input
             placeholder={`Search ${section.title.toLowerCase()}...`}
@@ -217,66 +278,69 @@ const SectionCard: React.FC<{
             onChange={(e) => onFiltersChange({ ...filters, searchTerm: e.target.value })}
             bg={useColorModeValue('gray.50', 'gray.600')}
             border="none"
+            fontSize="sm"
           />
         </InputGroup>
       </Box>
 
       {/* Content */}
-      <Box p={6}>
+      <Box p={4}>
         {filteredItems.length === 0 ? (
-          <Text color={mutedColor} textAlign="center" py={8}>
+          <Text color={mutedColor} textAlign="center" py={6} fontSize="sm">
             No items match your current filters.
           </Text>
         ) : (
-          <Grid templateColumns="repeat(auto-fit, minmax(300px, 1fr))" gap={4}>
+          <VStack spacing={1} align="stretch">
             {filteredItems.map((item, index) => (
-              <GridItem key={index}>
-                <Box
-                  bg={itemBg}
-                  p={4}
-                  borderRadius="lg"
-                  boxShadow="sm"
-                  _hover={{ bg: hoverBg, transform: 'translateY(-2px)', boxShadow: 'md' }}
-                  transition="all 0.2s"
-                  borderLeft="4px solid"
-                  borderColor={`teal.${Math.min(500 + index * 50, 800)}`}
-                >
-                  <Flex justify="space-between" align="flex-start" mb={3}>
+              <Box
+                key={index}
+                p={3}
+                bg={itemBg}
+                borderRadius="sm"
+                _hover={{ bg: hoverBg }}
+                transition="all 0.2s"
+                borderLeftWidth="3px"
+                borderLeftColor={`teal.${Math.min(400 + index * 50, 600)}`}
+              >
+                <HStack justify="space-between" align="center">
+                  <HStack spacing={3} flex={1}>
                     <Text 
-                      fontWeight="semibold" 
+                      fontWeight="medium" 
                       color={textColor} 
-                      flex="1"
                       fontSize="sm"
-                      lineHeight="tall"
+                      flex={1}
                     >
                       {item.name}
                     </Text>
-                    <VStack spacing={1} align="end" minW="80px">
+                    <HStack spacing={2}>
                       <Badge 
                         colorScheme="teal" 
                         variant="solid"
                         size="sm"
-                        borderRadius="full"
+                        px={2}
                       >
                         {item.count}
                       </Badge>
-                      <Text fontSize="xs" color={mutedColor} fontWeight="medium">
+                      <Text fontSize="xs" color={mutedColor} fontWeight="medium" minW="35px">
                         {item.percentage}%
                       </Text>
-                    </VStack>
-                  </Flex>
-                  
-                  <Progress 
-                    value={item.percentage} 
-                    size="sm" 
-                    colorScheme="teal"
-                    borderRadius="full"
-                    bg={useColorModeValue('gray.100', 'gray.600')}
-                  />
-                </Box>
-              </GridItem>
+                    </HStack>
+                  </HStack>
+                  <Box w="60px">
+                    <Progress 
+                      value={item.percentage} 
+                      size="sm" 
+                      colorScheme="teal"
+                      borderRadius="sm"
+                      bg={useColorModeValue('gray.100', 'gray.600')}
+                    />
+                  </Box>
+                </HStack>
+                
+                <JobSourcesDisplay item={item} />
+              </Box>
             ))}
-          </Grid>
+          </VStack>
         )}
       </Box>
 
@@ -381,99 +445,101 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ data }) => {
     : 0;
 
   return (
-    <VStack spacing={8} align="stretch">
+    <VStack spacing={5} align="stretch">
       {/* Enhanced Analysis Summary */}
-      <Box bg={summaryBg} p={6} borderRadius="xl" boxShadow="lg" borderLeft="4px solid" borderColor="teal.500">
-        <HStack spacing={4} mb={4}>
-          <TrendIcon w={6} h={6} color="teal.500" />
-          <Heading as="h2" size="lg" color="teal.500">
+      <Box bg={summaryBg} p={4} borderRadius="lg" boxShadow="md" borderLeft="3px solid" borderColor="teal.500">
+        <HStack spacing={3} mb={3}>
+          <TrendIcon w={5} h={5} color="teal.500" />
+          <Heading as="h2" size="md" color="teal.500">
             Analysis Summary
           </Heading>
         </HStack>
 
-        <Grid templateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap={6}>
-          <Stat bg={statBg} p={4} borderRadius="lg">
-            <StatLabel>Jobs Found</StatLabel>
-            <StatNumber color="teal.500">{data.metadata.total_jobs_found}</StatNumber>
-            <StatHelpText>Total postings discovered</StatHelpText>
-          </Stat>
+        <HStack spacing={4} wrap="wrap">
+          <HStack bg={statBg} p={3} borderRadius="md" minW="120px">
+            <VStack spacing={0} align="start">
+              <Text fontSize="xs" color="gray.500">Jobs Found</Text>
+              <Text fontSize="lg" fontWeight="bold" color="teal.500">{data.metadata.total_jobs_found}</Text>
+            </VStack>
+          </HStack>
 
-          <Stat bg={statBg} p={4} borderRadius="lg">
-            <StatLabel>Jobs Analyzed</StatLabel>
-            <StatNumber color="blue.500">{data.metadata.jobs_with_descriptions}</StatNumber>
-            <StatHelpText>With detailed descriptions</StatHelpText>
-          </Stat>
+          <HStack bg={statBg} p={3} borderRadius="md" minW="120px">
+            <VStack spacing={0} align="start">
+              <Text fontSize="xs" color="gray.500">Analyzed</Text>
+              <Text fontSize="lg" fontWeight="bold" color="blue.500">{data.metadata.jobs_with_descriptions}</Text>
+            </VStack>
+          </HStack>
 
-          <Stat bg={statBg} p={4} borderRadius="lg">
-            <StatLabel>Analysis Rate</StatLabel>
-            <StatNumber color="green.500">{analysisRate}%</StatNumber>
-            <StatHelpText>Data quality score</StatHelpText>
-          </Stat>
+          <HStack bg={statBg} p={3} borderRadius="md" minW="120px">
+            <VStack spacing={0} align="start">
+              <Text fontSize="xs" color="gray.500">Quality</Text>
+              <Text fontSize="lg" fontWeight="bold" color="green.500">{analysisRate}%</Text>
+            </VStack>
+          </HStack>
 
-          <Stat bg={statBg} p={4} borderRadius="lg">
-            <StatLabel>Search Query</StatLabel>
-            <StatNumber fontSize="md" color="purple.500">
-              {data.metadata.search_criteria.job_title}
-            </StatNumber>
-            <StatHelpText>
-              {data.metadata.search_criteria.location || 'All locations'}
-            </StatHelpText>
-          </Stat>
-        </Grid>
+          <HStack bg={statBg} p={3} borderRadius="md" minW="120px">
+            <VStack spacing={0} align="start">
+              <Text fontSize="xs" color="gray.500">Query</Text>
+              <Text fontSize="sm" fontWeight="bold" color="purple.500" noOfLines={1}>
+                {data.metadata.search_criteria.job_title}
+              </Text>
+            </VStack>
+          </HStack>
+        </HStack>
       </Box>
 
       {/* Tabbed Content */}
-      <Tabs variant="enclosed" colorScheme="teal">
+      <Tabs variant="enclosed" colorScheme="teal" size="sm">
         <TabList>
-          <Tab>
-            <HStack>
-              <ChartIcon w={4} h={4} />
+          <Tab fontSize="sm">
+            <HStack spacing={2}>
+              <ChartIcon w={3} h={3} />
               <Text>Skills ({data.skills.items.length})</Text>
             </HStack>
           </Tab>
-          <Tab>
-            <HStack>
-              <ViewIcon w={4} h={4} />
+          <Tab fontSize="sm">
+            <HStack spacing={2}>
+              <ViewIcon w={3} h={3} />
               <Text>Certifications ({data.certifications.items.length})</Text>
             </HStack>
           </Tab>
-          <Tab>
-            <HStack>
-              <TrendIcon w={4} h={4} />
+          <Tab fontSize="sm">
+            <HStack spacing={2}>
+              <TrendIcon w={3} h={3} />
               <Text>Experience ({data.experience.items.length})</Text>
             </HStack>
           </Tab>
-          <Tab>
-            <HStack>
-              <AnalyticsIcon w={4} h={4} />
+          <Tab fontSize="sm">
+            <HStack spacing={2}>
+              <AnalyticsIcon w={3} h={3} />
               <Text>Analytics & Insights</Text>
             </HStack>
           </Tab>
         </TabList>
 
         <TabPanels>
-          <TabPanel px={0}>
+          <TabPanel px={0} py={4}>
             <SectionCard 
               section={data.skills} 
               filters={filters}
               onFiltersChange={setFilters}
             />
           </TabPanel>
-          <TabPanel px={0}>
+          <TabPanel px={0} py={4}>
             <SectionCard 
               section={data.certifications} 
               filters={filters}
               onFiltersChange={setFilters}
             />
           </TabPanel>
-          <TabPanel px={0}>
+          <TabPanel px={0} py={4}>
             <SectionCard 
               section={data.experience} 
               filters={filters}
               onFiltersChange={setFilters}
             />
           </TabPanel>
-          <TabPanel px={0}>
+          <TabPanel px={0} py={4}>
             <AnalyticsInsights data={data} />
           </TabPanel>
         </TabPanels>

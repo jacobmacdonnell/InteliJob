@@ -47,6 +47,18 @@ const theme = extendTheme({
         backgroundColor: props.colorMode === 'dark' ? 'gray.900' : 'white',
         color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
         lineHeight: 'base',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      // Ensure consistent scrollbar styling
+      '*::-webkit-scrollbar': {
+        width: '8px',
+      },
+      '*::-webkit-scrollbar-track': {
+        background: props.colorMode === 'dark' ? 'gray.800' : 'gray.100',
+      },
+      '*::-webkit-scrollbar-thumb': {
+        background: props.colorMode === 'dark' ? 'gray.600' : 'gray.400',
+        borderRadius: '4px',
       },
     }),
   },

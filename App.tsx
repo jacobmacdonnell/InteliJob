@@ -8,7 +8,7 @@ import {
   Icon,
   Flex,
   useColorModeValue,
-  Divider
+  HStack
 } from '@chakra-ui/react';
 import { JobInputForm } from './components/JobInputForm';
 import { ReportDisplay } from './components/ReportDisplay';
@@ -45,33 +45,33 @@ const AppContent: React.FC = () => {
       minH="100vh" 
       bgGradient={bgGradient}
       display="flex" 
-      flexDirection="column" 
-      alignItems="center"
+      flexDirection="column"
     >
       {/* Header Section */}
       <Box
         w="full"
         bg={headerBg}
-        py={8}
+        py={3}
         px={{ base: 4, sm: 6, lg: 8 }}
         boxShadow={shadowColor}
         borderBottomWidth="1px"
         borderColor={useColorModeValue('gray.200', 'gray.700')}
+        position="sticky"
+        top={0}
+        zIndex={10}
       >
         <Container maxW="4xl">
-          <VStack spacing={4} textAlign="center">
-            <Box position="relative">
+          <VStack spacing={1} textAlign="center">
+            <HStack align="center" spacing={3}>
               <SearchDocIcon 
-                w={12} 
-                h={12} 
+                w={8} 
+                h={8} 
                 color="teal.500"
-                filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"
+                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
               />
-            </Box>
-            <VStack spacing={2}>
               <Heading 
                 as="h1" 
-                size="2xl" 
+                size="xl" 
                 bgGradient="linear(to-r, teal.400, blue.500)"
                 bgClip="text"
                 fontWeight="bold"
@@ -79,27 +79,46 @@ const AppContent: React.FC = () => {
               >
                 InteliJob
               </Heading>
-              <Text 
-                color={useColorModeValue('gray.600', 'gray.300')}
-                fontSize="lg"
-                fontWeight="medium"
-                maxW="md"
+              <Box 
+                px={3} 
+                py={1} 
+                bg="orange.500" 
+                color="white" 
+                borderRadius="md" 
+                fontSize="sm" 
+                fontWeight="bold"
+                textTransform="uppercase"
+                letterSpacing="wide"
               >
-                Transform job postings into actionable career insights
-              </Text>
-            </VStack>
+                Beta
+              </Box>
+            </HStack>
+            <Text 
+              color={useColorModeValue('gray.600', 'gray.300')}
+              fontSize="md"
+              fontWeight="medium"
+            >
+              Professional job market intelligence
+            </Text>
           </VStack>
         </Container>
       </Box>
 
       {/* Main Content */}
-      <Container as="main" maxW="4xl" w="full" py={8} px={{ base: 4, sm: 6, lg: 8 }}>
-        <VStack spacing={8} align="stretch">
+      <Container 
+        as="main" 
+        maxW="4xl" 
+        w="full" 
+        py={2} 
+        px={{ base: 4, sm: 6, lg: 8 }}
+        flex={1}
+      >
+        <VStack spacing={2} align="stretch">
           {/* Input Form Card */}
           <Box 
             bg={useColorModeValue('white', 'gray.800')}
-            p={{ base: 6, sm: 8 }} 
-            borderRadius="2xl" 
+            p={{ base: 3, sm: 4 }} 
+            borderRadius="lg" 
             boxShadow={shadowColor}
             borderWidth="1px"
             borderColor={useColorModeValue('gray.200', 'gray.700')}
@@ -111,7 +130,7 @@ const AppContent: React.FC = () => {
               top: 0,
               left: 0,
               right: 0,
-              height: '4px',
+              height: '3px',
               bgGradient: 'linear(to-r, teal.400, blue.500)',
             }}
           >
@@ -125,7 +144,7 @@ const AppContent: React.FC = () => {
           
           {/* Loading State */}
           {isLoading && (
-            <Flex justify="center" py={12}>
+            <Flex justify="center" py={3}>
               <LoadingSpinner />
             </Flex>
           )}
@@ -143,30 +162,30 @@ const AppContent: React.FC = () => {
       <Box 
         as="footer" 
         w="full"
-        mt="auto"
-        py={8}
+        py={2}
         px={{ base: 4, sm: 6, lg: 8 }}
         bg={useColorModeValue('gray.50', 'gray.900')}
         borderTopWidth="1px"
         borderColor={useColorModeValue('gray.200', 'gray.700')}
+        mt="auto"
       >
         <Container maxW="4xl">
-          <VStack spacing={3} textAlign="center">
-            <Divider />
+          <HStack justify="space-between" align="center">
             <Text 
               color={useColorModeValue('gray.600', 'gray.400')} 
-              fontSize="sm"
-              fontWeight="medium"
+              fontSize="xs"
+              fontWeight="normal"
             >
-              &copy; {new Date().getFullYear()} InteliJob. Empowering your career journey.
+              &copy; {new Date().getFullYear()} InteliJob
             </Text>
             <Text 
               fontSize="xs" 
               color={useColorModeValue('gray.500', 'gray.500')}
+              fontWeight="normal"
             >
-              Professional job market intelligence platform
+              Professional job market intelligence
             </Text>
-          </VStack>
+          </HStack>
         </Container>
       </Box>
     </Box>

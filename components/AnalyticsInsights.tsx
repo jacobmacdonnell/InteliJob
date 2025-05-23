@@ -13,14 +13,7 @@ import {
   Badge,
   Progress,
   Icon,
-  Divider,
-  Alert,
-  AlertIcon,
-  List,
-  ListItem,
-  ListIcon,
   useColorModeValue,
-  Flex,
   CircularProgress,
   CircularProgressLabel,
 } from '@chakra-ui/react';
@@ -63,8 +56,10 @@ interface Insight {
 }
 
 export const AnalyticsInsights: React.FC<AnalyticsInsightsProps> = ({ data }) => {
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const statBg = useColorModeValue('gray.50', 'gray.700');
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const statBg = useColorModeValue('gray.50', 'gray.600');
+  const textColor = useColorModeValue('gray.800', 'gray.100');
+  const mutedTextColor = useColorModeValue('gray.700', 'gray.200');
 
   const analytics = useMemo(() => {
     const skills = data.skills.items;
@@ -213,68 +208,68 @@ export const AnalyticsInsights: React.FC<AnalyticsInsightsProps> = ({ data }) =>
   };
 
   return (
-    <VStack spacing={6} align="stretch">
+    <VStack spacing={4} align="stretch">
       {/* Market Overview */}
-      <Box bg={cardBg} p={6} borderRadius="xl" boxShadow="lg">
-        <HStack spacing={3} mb={4}>
-          <TrendingUpIcon w={6} h={6} color="teal.500" />
-          <Heading as="h3" size="lg" color="teal.500">
+      <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
+        <HStack spacing={3} mb={3}>
+          <TrendingUpIcon w={5} h={5} color="teal.500" />
+          <Heading as="h3" size="md" color="teal.500">
             Market Analytics
           </Heading>
         </HStack>
 
-        <Grid templateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap={4}>
-          <Stat bg={statBg} p={4} borderRadius="lg">
-            <StatLabel>Market Size</StatLabel>
-            <StatNumber color="blue.500">{data.metadata.total_jobs_found}</StatNumber>
-            <StatHelpText>Total opportunities found</StatHelpText>
+        <Grid templateColumns="repeat(auto-fit, minmax(160px, 1fr))" gap={3}>
+          <Stat bg={statBg} p={3} borderRadius="md">
+            <StatLabel fontSize="sm">Market Size</StatLabel>
+            <StatNumber color="blue.500" fontSize="lg">{data.metadata.total_jobs_found}</StatNumber>
+            <StatHelpText fontSize="xs">Total opportunities found</StatHelpText>
           </Stat>
 
-          <Stat bg={statBg} p={4} borderRadius="lg">
-            <StatLabel>Data Quality</StatLabel>
-            <StatNumber color="green.500">
+          <Stat bg={statBg} p={3} borderRadius="md">
+            <StatLabel fontSize="sm">Data Quality</StatLabel>
+            <StatNumber color="green.500" fontSize="lg">
               {Math.round(analytics.analysisQuality * 100)}%
             </StatNumber>
-            <StatHelpText>Job descriptions analyzed</StatHelpText>
+            <StatHelpText fontSize="xs">Job descriptions analyzed</StatHelpText>
           </Stat>
 
-          <Stat bg={statBg} p={4} borderRadius="lg">
-            <StatLabel>Skill Diversity</StatLabel>
-            <StatNumber color="purple.500">{data.skills.items.length}</StatNumber>
-            <StatHelpText>Unique skills identified</StatHelpText>
+          <Stat bg={statBg} p={3} borderRadius="md">
+            <StatLabel fontSize="sm">Skill Diversity</StatLabel>
+            <StatNumber color="purple.500" fontSize="lg">{data.skills.items.length}</StatNumber>
+            <StatHelpText fontSize="xs">Unique skills identified</StatHelpText>
           </Stat>
 
-          <Stat bg={statBg} p={4} borderRadius="lg">
-            <StatLabel>Cert Requirements</StatLabel>
-            <StatNumber color="orange.500">{analytics.essentialCerts.length}</StatNumber>
-            <StatHelpText>Essential certifications</StatHelpText>
+          <Stat bg={statBg} p={3} borderRadius="md">
+            <StatLabel fontSize="sm">Cert Requirements</StatLabel>
+            <StatNumber color="orange.500" fontSize="lg">{analytics.essentialCerts.length}</StatNumber>
+            <StatHelpText fontSize="xs">Essential certifications</StatHelpText>
           </Stat>
         </Grid>
       </Box>
 
       {/* Experience Level Distribution */}
-      <Box bg={cardBg} p={6} borderRadius="xl" boxShadow="lg">
-        <HStack spacing={3} mb={4}>
-          <CompetitionIcon w={6} h={6} color="blue.500" />
-          <Heading as="h3" size="lg" color="blue.500">
+      <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
+        <HStack spacing={3} mb={3}>
+          <CompetitionIcon w={5} h={5} color="blue.500" />
+          <Heading as="h3" size="md" color="blue.500">
             Experience Level Distribution
           </Heading>
         </HStack>
 
-        <Grid templateColumns="repeat(auto-fit, minmax(150px, 1fr))" gap={6}>
+        <Grid templateColumns="repeat(auto-fit, minmax(120px, 1fr))" gap={4}>
           <VStack>
             <CircularProgress 
               value={analytics.experienceLevels.entry} 
               color="green.400" 
-              size="100px"
-              thickness="12px"
+              size="80px"
+              thickness="10px"
             >
-              <CircularProgressLabel fontSize="sm" fontWeight="bold">
+              <CircularProgressLabel fontSize="xs" fontWeight="bold">
                 {Math.round(analytics.experienceLevels.entry)}%
               </CircularProgressLabel>
             </CircularProgress>
-            <Text fontWeight="semibold" color="green.500">Entry Level</Text>
-            <Text fontSize="sm" color="gray.500" textAlign="center">
+            <Text fontWeight="semibold" color="green.500" fontSize="sm">Entry Level</Text>
+            <Text fontSize="xs" color={mutedTextColor} textAlign="center">
               0-2 years experience
             </Text>
           </VStack>
@@ -283,15 +278,15 @@ export const AnalyticsInsights: React.FC<AnalyticsInsightsProps> = ({ data }) =>
             <CircularProgress 
               value={analytics.experienceLevels.mid} 
               color="blue.400" 
-              size="100px"
-              thickness="12px"
+              size="80px"
+              thickness="10px"
             >
-              <CircularProgressLabel fontSize="sm" fontWeight="bold">
+              <CircularProgressLabel fontSize="xs" fontWeight="bold">
                 {Math.round(analytics.experienceLevels.mid)}%
               </CircularProgressLabel>
             </CircularProgress>
-            <Text fontWeight="semibold" color="blue.500">Mid Level</Text>
-            <Text fontSize="sm" color="gray.500" textAlign="center">
+            <Text fontWeight="semibold" color="blue.500" fontSize="sm">Mid Level</Text>
+            <Text fontSize="xs" color={mutedTextColor} textAlign="center">
               3-5 years experience
             </Text>
           </VStack>
@@ -300,15 +295,15 @@ export const AnalyticsInsights: React.FC<AnalyticsInsightsProps> = ({ data }) =>
             <CircularProgress 
               value={analytics.experienceLevels.senior} 
               color="purple.400" 
-              size="100px"
-              thickness="12px"
+              size="80px"
+              thickness="10px"
             >
-              <CircularProgressLabel fontSize="sm" fontWeight="bold">
+              <CircularProgressLabel fontSize="xs" fontWeight="bold">
                 {Math.round(analytics.experienceLevels.senior)}%
               </CircularProgressLabel>
             </CircularProgress>
-            <Text fontWeight="semibold" color="purple.500">Senior Level</Text>
-            <Text fontSize="sm" color="gray.500" textAlign="center">
+            <Text fontWeight="semibold" color="purple.500" fontSize="sm">Senior Level</Text>
+            <Text fontSize="xs" color={mutedTextColor} textAlign="center">
               5+ years experience
             </Text>
           </VStack>
@@ -317,16 +312,16 @@ export const AnalyticsInsights: React.FC<AnalyticsInsightsProps> = ({ data }) =>
 
       {/* Competition Analysis */}
       {analytics.topSkills.length > 0 && (
-        <Box bg={cardBg} p={6} borderRadius="xl" boxShadow="lg">
-          <HStack spacing={3} mb={4}>
-            <StarIcon w={6} h={6} color="yellow.500" />
-            <Heading as="h3" size="lg" color="yellow.600">
-              Competition Analysis
+        <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
+          <HStack spacing={3} mb={3}>
+            <StarIcon w={5} h={5} color="yellow.500" />
+            <Heading as="h3" size="md" color="yellow.600">
+              Top Skills Competition
             </Heading>
           </HStack>
 
-          <VStack spacing={4} align="stretch">
-            {analytics.topSkills.slice(0, 5).map((skill, index) => {
+          <VStack spacing={1} align="stretch">
+            {analytics.topSkills.slice(0, 8).map((skill, index) => {
               const competition = analytics.getCompetitionLevel(skill.percentage);
               const competitionColor = 
                 competition === 'Very High' ? 'red' :
@@ -335,28 +330,27 @@ export const AnalyticsInsights: React.FC<AnalyticsInsightsProps> = ({ data }) =>
                 competition === 'Low' ? 'blue' : 'green';
               
               return (
-                <Box key={index} p={4} bg={statBg} borderRadius="lg">
-                  <Flex justify="space-between" align="center" mb={2}>
-                    <Text fontWeight="semibold">{skill.name}</Text>
-                    <HStack>
-                      <Badge colorScheme={competitionColor} variant="solid">
-                        {competition} Competition
-                      </Badge>
-                      <Badge variant="outline">
-                        {skill.percentage}%
-                      </Badge>
-                    </HStack>
-                  </Flex>
-                  <Progress 
-                    value={skill.percentage} 
-                    colorScheme={competitionColor}
-                    size="sm"
-                    borderRadius="full"
-                  />
-                  <Text fontSize="xs" color="gray.500" mt={1}>
-                    Required in {skill.count} out of {analytics.totalJobsAnalyzed} job postings
-                  </Text>
-                </Box>
+                <HStack key={index} py={2} px={3} bg={statBg} borderRadius="sm" justify="space-between">
+                  <HStack spacing={3} flex={1}>
+                    <Text fontWeight="medium" fontSize="sm" flex={1}>
+                      {skill.name}
+                    </Text>
+                    <Badge colorScheme={competitionColor} variant="solid" size="sm">
+                      {competition}
+                    </Badge>
+                    <Text fontSize="xs" color={mutedTextColor} minW="40px" textAlign="right">
+                      {skill.percentage}%
+                    </Text>
+                  </HStack>
+                  <Box w="60px">
+                    <Progress 
+                      value={skill.percentage} 
+                      colorScheme={competitionColor}
+                      size="sm"
+                      borderRadius="sm"
+                    />
+                  </Box>
+                </HStack>
               );
             })}
           </VStack>
@@ -364,86 +358,96 @@ export const AnalyticsInsights: React.FC<AnalyticsInsightsProps> = ({ data }) =>
       )}
 
       {/* Insights & Recommendations */}
-      <Box bg={cardBg} p={6} borderRadius="xl" boxShadow="lg">
-        <HStack spacing={3} mb={4}>
-          <InsightIcon w={6} h={6} color="teal.500" />
-          <Heading as="h3" size="lg" color="teal.500">
-            Key Insights & Recommendations
+      <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
+        <HStack spacing={3} mb={3}>
+          <InsightIcon w={5} h={5} color="teal.500" />
+          <Heading as="h3" size="md" color="teal.500">
+            Key Insights
           </Heading>
         </HStack>
 
-        <VStack spacing={4} align="stretch">
+        <VStack spacing={2} align="stretch">
           {insights.map((insight, index) => (
-            <Alert 
+            <HStack 
               key={index} 
-              status={insight.type} 
-              borderRadius="lg" 
-              flexDirection="column" 
-              alignItems="flex-start"
-              p={4}
+              p={3}
+              bg={useColorModeValue(
+                insight.type === 'success' ? 'green.50' : 
+                insight.type === 'warning' ? 'orange.50' : 
+                insight.type === 'info' ? 'blue.50' : 'red.50',
+                insight.type === 'success' ? 'green.900' : 
+                insight.type === 'warning' ? 'orange.900' : 
+                insight.type === 'info' ? 'blue.900' : 'red.900'
+              )}
+              borderRadius="sm" 
+              align="start"
+              spacing={3}
             >
-              <HStack w="full" spacing={3}>
-                <AlertIcon as={getInsightIcon(insight.type)} />
-                <VStack align="start" flex="1" spacing={1}>
-                  <Text fontWeight="bold" fontSize="md">
+              <Icon 
+                as={getInsightIcon(insight.type)} 
+                w={4} 
+                h={4} 
+                color={`${getInsightColorScheme(insight.type)}.500`}
+                mt={0.5}
+                flexShrink={0}
+              />
+              <VStack align="start" spacing={1} flex={1}>
+                <HStack justify="space-between" w="full">
+                  <Text fontWeight="semibold" fontSize="sm" color={textColor}>
                     {insight.title}
                   </Text>
-                  <Text fontSize="sm" color="gray.600">
-                    {insight.description}
-                  </Text>
                   {insight.value && (
-                    <Badge colorScheme={getInsightColorScheme(insight.type)} variant="subtle">
+                    <Badge colorScheme={getInsightColorScheme(insight.type)} variant="subtle" size="sm">
                       {insight.value}
                     </Badge>
                   )}
-                </VStack>
-              </HStack>
-              {insight.recommendation && (
-                <>
-                  <Divider my={2} />
-                  <HStack spacing={2}>
-                    <Icon as={InfoIcon} w={4} h={4} color="gray.500" />
-                    <Text fontSize="sm" fontStyle="italic" color="gray.600">
-                      <strong>Recommendation:</strong> {insight.recommendation}
-                    </Text>
-                  </HStack>
-                </>
-              )}
-            </Alert>
+                </HStack>
+                <Text fontSize="xs" color={mutedTextColor} lineHeight="1.4">
+                  {insight.description}
+                </Text>
+                {insight.recommendation && (
+                  <Text fontSize="xs" color={textColor} fontStyle="italic" mt={1}>
+                    💡 {insight.recommendation}
+                  </Text>
+                )}
+              </VStack>
+            </HStack>
           ))}
         </VStack>
       </Box>
 
       {/* Niche Opportunities */}
       {analytics.nicheSkills.length > 0 && (
-        <Box bg={cardBg} p={6} borderRadius="xl" boxShadow="lg">
-          <HStack spacing={3} mb={4}>
-            <TrendingUpIcon w={6} h={6} color="green.500" />
-            <Heading as="h3" size="lg" color="green.500">
+        <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md">
+          <HStack spacing={3} mb={3}>
+            <TrendingUpIcon w={5} h={5} color="green.500" />
+            <Heading as="h3" size="md" color="green.500">
               Niche Opportunities
             </Heading>
           </HStack>
 
-          <Text mb={4} color="gray.600" fontSize="sm">
+          <Text mb={3} color={textColor} fontSize="xs">
             Skills with moderate demand but potentially lower competition:
           </Text>
 
-          <List spacing={3}>
+          <VStack spacing={1} align="stretch">
             {analytics.nicheSkills.map((skill, index) => (
-              <ListItem key={index}>
-                <HStack>
-                  <ListIcon as={CheckCircleIcon} color="green.400" />
-                  <Text flex="1">{skill.name}</Text>
-                  <Badge colorScheme="green" variant="subtle">
-                    {skill.percentage}% demand
+              <HStack key={index} py={2} px={3} bg={statBg} borderRadius="sm" justify="space-between">
+                <HStack spacing={2} flex={1}>
+                  <CheckCircleIcon color="green.400" w={3} h={3} />
+                  <Text fontSize="sm" flex={1}>{skill.name}</Text>
+                </HStack>
+                <HStack spacing={2}>
+                  <Badge colorScheme="green" variant="subtle" size="sm">
+                    {skill.percentage}%
                   </Badge>
-                  <Badge variant="outline">
-                    {skill.count} jobs
+                  <Badge variant="outline" size="sm">
+                    {skill.count}
                   </Badge>
                 </HStack>
-              </ListItem>
+              </HStack>
             ))}
-          </List>
+          </VStack>
         </Box>
       )}
     </VStack>
