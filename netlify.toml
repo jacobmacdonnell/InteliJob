@@ -38,6 +38,8 @@
     # Start with this, test thoroughly, and use browser console errors to identify what needs to be added.
     # For example, if you use Google Fonts, you'd add https://fonts.googleapis.com and https://fonts.gstatic.com to style-src and font-src.
     # If your API is at https://intelijob-backend.onrender.com, you'd add that to connect-src.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://intelijob-backend.onrender.com; object-src 'none'; frame-ancestors 'self';"    # Consider removing 'unsafe-inline' and 'unsafe-eval' if possible for better security.
+    # Added nominatim.openstreetmap.org for geolocation reverse geocoding functionality.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://intelijob-backend.onrender.com https://nominatim.openstreetmap.org; object-src 'none'; frame-ancestors 'self';"
+    # Consider removing 'unsafe-inline' and 'unsafe-eval' if possible for better security.
     # 'unsafe-eval' is particularly risky. Many modern frameworks avoid it.
     # For Chakra UI (which you use), you might need 'unsafe-inline' for styles if you're not using a strict CSP-compatible setup with it. 
