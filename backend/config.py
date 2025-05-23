@@ -33,7 +33,7 @@ class Settings:
         # self.max_jobs_per_request: int = 50 # Example if you were to implement rate limits
 
         # Rate Limiting Configuration
-        self.rate_limit_default: str = os.getenv("RATE_LIMIT_DEFAULT", "100/minute")
+        self.rate_limit_default: str = os.getenv("RATE_LIMIT_DEFAULT", "5/day")
         self.rate_limit_strategy: str = os.getenv("RATE_LIMIT_STRATEGY", "moving-window") # or "fixed-window", "fixed-window-elastic-expiry"
         
     def is_production(self) -> bool:
