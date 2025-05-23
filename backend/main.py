@@ -272,7 +272,7 @@ async def root():
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
 @limiter.limit(settings.rate_limit_default)
-async def analyze_jobs(http_request: Request, request: JobSearchRequest = Body(...)):
+async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
     """Main endpoint to analyze job postings"""
     try:
         # Map time range to JSearch API format
@@ -284,12 +284,12 @@ async def analyze_jobs(http_request: Request, request: JobSearchRequest = Body(.
             "1m": "month"
         }
         
-        date_posted = date_posted_map.get(request.time_range, "today")
+        date_posted = date_posted_map.get(payload.time_range, "today")
         
         # Fetch jobs from JSearch API
         jobs = await fetch_jobs_from_jsearch(
-            job_title=request.job_title,
-            location=request.location,
+            job_title=payload.job_title,
+            location=payload.location,
             date_posted=date_posted
         )
         
@@ -333,9 +333,9 @@ async def analyze_jobs(http_request: Request, request: JobSearchRequest = Body(.
             "total_jobs_found": len(jobs),
             "jobs_with_descriptions": len([j for j in jobs if j.get("job_description")]),
             "search_criteria": {
-                "job_title": request.job_title,
-                "location": request.location,
-                "time_range": request.time_range
+                "job_title": payload.job_title,
+                "location": payload.location,
+                "time_range": payload.time_range
             }
         }
         
