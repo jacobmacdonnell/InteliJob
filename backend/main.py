@@ -59,6 +59,13 @@ except IOError:
     print("⚠️  spaCy English model not found. Please install it with: python -m spacy download en_core_web_sm")
     print("   NLP features will be limited to keyword matching.")
 
+# Environment configuration
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+ENABLE_MOCK_DATA = os.getenv("ENABLE_MOCK_DATA", "true" if ENVIRONMENT == "development" else "false").lower() == "true"
+
+print(f"🔧 Environment: {ENVIRONMENT}")
+print(f"🧪 Mock data enabled: {ENABLE_MOCK_DATA}")
+
 # Pydantic models
 class JobSearchRequest(BaseModel):
     job_title: str
@@ -75,6 +82,146 @@ class JobAnalysisResponse(BaseModel):
 JSEARCH_API_URL = settings.jsearch_api_url
 RAPIDAPI_KEY = settings.rapidapi_key # Ensures consistency with config
 # Note: RAPIDAPI_KEY is also checked by settings.is_rapidapi_configured()
+
+# Mock job data for DEVELOPMENT/TESTING ONLY
+def get_mock_jobs(job_title: str, location: str = None) -> List[Dict]:
+    """Return mock job data for DEVELOPMENT/TESTING purposes only"""
+    if ENVIRONMENT == "production":
+        raise HTTPException(
+            status_code=500, 
+            detail="Mock data is not available in production environment. Please configure RAPIDAPI_KEY."
+        )
+    
+    job_title_lower = job_title.lower()
+    
+    # Customize mock data based on job title
+    if "software" in job_title_lower or "developer" in job_title_lower or "engineer" in job_title_lower:
+        return [
+            {
+                "job_description": """
+                We are seeking a Senior Software Engineer with 5+ years of experience in Python, React, and AWS. 
+                The ideal candidate will have experience with Docker, Kubernetes, and microservices architecture.
+                Required certifications: AWS Certified Solutions Architect, experience with PostgreSQL and Redis.
+                Bachelor's degree required, 3-5 years of experience preferred. Knowledge of JavaScript, TypeScript, 
+                Node.js, and CI/CD pipelines is essential. Experience with Agile development and Scrum methodology.
+                """
+            },
+            {
+                "job_description": """
+                Looking for a Full Stack Developer proficient in JavaScript, React, Node.js, and MongoDB. 
+                Must have 2+ years of experience with modern web frameworks and RESTful APIs. 
+                Experience with Git, Jenkins, and cloud platforms (AWS, Azure, GCP) preferred.
+                Understanding of responsive design, HTML5, CSS3, and modern frontend build tools.
+                Minimum 2 years experience, bachelor's degree in computer science or related field.
+                """
+            },
+            {
+                "job_description": """
+                Senior Python Developer needed for fintech startup. 5-7 years experience required.
+                Strong background in Django, Flask, PostgreSQL, and Redis. Experience with Docker,
+                Kubernetes, and AWS cloud services. Knowledge of machine learning libraries like
+                TensorFlow, scikit-learn, pandas, and numpy. Certified AWS Developer preferred.
+                Experience with financial systems and trading algorithms a plus. Masters degree preferred.
+                """
+            },
+            {
+                "job_description": """
+                DevOps Engineer position requiring expertise in Terraform, Ansible, Docker, and Kubernetes.
+                3+ years experience with CI/CD pipelines using Jenkins or GitLab CI. 
+                AWS certification required (Solutions Architect or DevOps Engineer).
+                Experience with monitoring tools like Prometheus, Grafana, and ELK stack.
+                Bachelor's degree and 3-5 years of experience in infrastructure automation.
+                """
+            },
+            {
+                "job_description": """
+                Front-end Developer role focusing on React, TypeScript, and modern JavaScript.
+                2-4 years experience with responsive web design and cross-browser compatibility.
+                Experience with state management (Redux, Context API), testing frameworks (Jest, Cypress),
+                and build tools (Webpack, Vite). Knowledge of CSS preprocessors and UI libraries.
+                Bachelor's degree and 2+ years of frontend development experience required.
+                """
+            }
+        ]
+    elif "data" in job_title_lower or "analyst" in job_title_lower:
+        return [
+            {
+                "job_description": """
+                Data Scientist position requiring 3+ years experience with Python, R, and SQL.
+                Strong background in machine learning, statistical analysis, and data visualization.
+                Experience with Tableau, Power BI, pandas, numpy, scikit-learn, and TensorFlow.
+                AWS or Google Cloud certification preferred. Master's degree in statistics,
+                mathematics, or related quantitative field. 3-5 years of experience required.
+                """
+            },
+            {
+                "job_description": """
+                Business Intelligence Analyst with expertise in SQL, Tableau, and data warehousing.
+                2+ years experience with ETL processes and database design. Knowledge of Python
+                for data analysis and automation. Experience with cloud platforms and big data
+                technologies like Spark and Hadoop. Bachelor's degree and 2-4 years experience.
+                """
+            },
+            {
+                "job_description": """
+                Senior Data Engineer needed for building scalable data pipelines. 4+ years experience
+                with Python, Spark, Kafka, and Airflow. Strong SQL skills and experience with
+                cloud data platforms (AWS, GCP, Azure). Knowledge of data modeling and warehousing
+                concepts. Experience with real-time data processing and distributed systems.
+                Bachelor's degree in computer science and 4-6 years relevant experience.
+                """
+            }
+        ]
+    elif "cyber" in job_title_lower or "security" in job_title_lower:
+        return [
+            {
+                "job_description": """
+                Cybersecurity Analyst position requiring 3+ years experience in information security.
+                CISSP, CISM, or Security+ certification required. Experience with SIEM tools,
+                vulnerability assessment, and incident response. Knowledge of network security,
+                firewalls, and intrusion detection systems. Understanding of compliance frameworks
+                like SOC2, ISO 27001. Bachelor's degree and 3-5 years security experience required.
+                """
+            },
+            {
+                "job_description": """
+                Senior Security Engineer with expertise in cloud security (AWS, Azure, GCP).
+                5+ years experience with security architecture and risk assessment. 
+                Certified Ethical Hacker (CEH) or equivalent certification preferred.
+                Experience with security tools like Nessus, Wireshark, and penetration testing.
+                Strong background in cryptography and secure coding practices. Masters preferred.
+                """
+            },
+            {
+                "job_description": """
+                Information Security Specialist focusing on threat analysis and incident response.
+                2-4 years experience with security monitoring and forensics. GCIH or GCFA
+                certification preferred. Experience with threat intelligence platforms and
+                malware analysis. Knowledge of scripting languages (Python, PowerShell) for
+                automation. Bachelor's degree in cybersecurity or related field required.
+                """
+            }
+        ]
+    else:
+        # Generic mock data for other job titles
+        return [
+            {
+                "job_description": """
+                Professional position requiring 2-5 years of relevant experience. Bachelor's degree
+                preferred. Strong communication skills and ability to work in team environment.
+                Experience with project management tools and methodologies. Knowledge of industry
+                best practices and current technologies. Certification in relevant field preferred.
+                """
+            },
+            {
+                "job_description": """
+                Entry to mid-level position seeking candidates with 1-3 years experience.
+                Technical skills in relevant software and tools required. Strong analytical
+                and problem-solving abilities. Experience with data analysis and reporting.
+                Bachelor's degree in related field. Professional certifications a plus.
+                """
+            }
+        ]
 
 # Predefined certification patterns (case-insensitive)
 CERTIFICATION_PATTERNS = [
@@ -149,10 +296,25 @@ EXPERIENCE_PATTERNS = [
 ]
 
 async def fetch_jobs_from_jsearch(job_title: str, location: str = None, date_posted: str = "today") -> List[Dict]:
-    """Fetch job postings from JSearch API"""
-    if not RAPIDAPI_KEY:
-        raise HTTPException(status_code=500, detail="RAPIDAPI_KEY not configured")
+    """Fetch job postings from JSearch API or return mock data in development"""
     
+    # Check if we have API key
+    if not RAPIDAPI_KEY:
+        if ENVIRONMENT == "production":
+            raise HTTPException(
+                status_code=500, 
+                detail="RapidAPI key is required in production environment. Please configure RAPIDAPI_KEY environment variable."
+            )
+        elif ENABLE_MOCK_DATA:
+            print("🧪 Using mock data for development/testing - RAPIDAPI_KEY not configured")
+            return get_mock_jobs(job_title, location)
+        else:
+            raise HTTPException(
+                status_code=500, 
+                detail="RAPIDAPI_KEY not configured and mock data is disabled. Please set RAPIDAPI_KEY or enable mock data with ENABLE_MOCK_DATA=true"
+            )
+    
+    # Use real API
     headers = {
         "X-RapidAPI-Key": RAPIDAPI_KEY,
         "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
@@ -354,11 +516,14 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
 @app.get("/health")
 @limiter.exempt
 async def health_check():
-    """Detailed health check"""
+    """Detailed health check with environment information"""
     return {
         "status": "healthy",
+        "environment": ENVIRONMENT,
+        "mock_data_enabled": ENABLE_MOCK_DATA,
         "spacy_loaded": nlp is not None,
         "rapidapi_configured": bool(RAPIDAPI_KEY),
+        "data_source": "live_api" if RAPIDAPI_KEY else ("mock_data" if ENABLE_MOCK_DATA else "none"),
         "version": "1.0.0"
     }
 

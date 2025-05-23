@@ -1,13 +1,18 @@
 {
   "name": "intelijob",
+  "version": "1.0.0",
+  "description": "Professional job market intelligence platform with AI-powered insights",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
+  "keywords": ["job-analysis", "career-insights", "AI", "job-market", "NLP"],
+  "author": "InteliJob Team",
+  "license": "MIT",
   "dependencies": {
     "@chakra-ui/icons": "2.1.1",
     "@chakra-ui/react": "2.8.2",

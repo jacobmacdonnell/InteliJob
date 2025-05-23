@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { JobCriteria, ReportData, BackendReportData } from '../types';
+import type { JobCriteria, ReportData, BackendReportData, ExtractedItem } from '../types';
 
 // Backend API configuration
 // const API_BASE_URL = 'http://localhost:8000';
@@ -15,20 +15,118 @@ const apiClient = axios.create({
   },
 });
 
-// Transform backend data to frontend format
+// Data quality filters
+const filterQualityData = (items: ExtractedItem[]): ExtractedItem[] => {
+  if (!items || items.length === 0) return [];
+
+  return items.filter(item => {
+    // Skip items with very low occurrence (noise)
+    if (item.count < 2 && item.percentage < 5) return false;
+    
+    // Skip empty or very short names
+    if (!item.name || item.name.trim().length < 2) return false;
+    
+    // Skip items that are too generic or nonsensical
+    const lowercaseName = item.name.toLowerCase().trim();
+    const nonsensicalPatterns = [
+      /^[a-z]{1,2}$/i, // Single or double letters
+      /^\d+$/, // Only numbers
+      /^[^a-zA-Z0-9\s]+$/, // Only special characters
+      /^(and|or|the|a|an|in|on|at|to|for|of|with|by|from)$/i, // Common stop words
+      /^(work|job|role|position|candidate|team|company|business)$/i, // Too generic job terms
+      /^(good|great|excellent|strong|solid|basic|advanced|senior|junior)$/i, // Generic qualifiers
+      /^(ability|knowledge|understanding|experience|skills)$/i, // Generic skill words
+      /^(preferred|required|must|should|nice|plus|bonus)$/i, // Requirement words
+      /^(years?|months?|days?|hours?)$/i, // Time units without context
+    ];
+    
+    if (nonsensicalPatterns.some(pattern => pattern.test(lowercaseName))) {
+      return false;
+    }
+    
+    // Skip items that are too long (likely extraction errors)
+    if (item.name.length > 100) return false;
+    
+    return true;
+  }).slice(0, 15); // Limit to top 15 items for better UX
+};
+
+// Enhanced skill filtering
+const filterSkills = (items: ExtractedItem[]): ExtractedItem[] => {
+  const filtered = filterQualityData(items);
+  
+  return filtered.filter(item => {
+    const name = item.name.toLowerCase().trim();
+    
+    // Additional skill-specific filters
+    const invalidSkillPatterns = [
+      /^(using|working|developing|building|creating|managing|leading)$/i,
+      /^(software|hardware|technology|tools|platforms|systems)$/i,
+      /^(frontend|backend|fullstack|full-stack)$/i, // Too generic
+      /^(web|mobile|desktop|cloud)$/i, // Too generic without context
+    ];
+    
+    return !invalidSkillPatterns.some(pattern => pattern.test(name));
+  });
+};
+
+// Enhanced certification filtering
+const filterCertifications = (items: ExtractedItem[]): ExtractedItem[] => {
+  const filtered = filterQualityData(items);
+  
+  return filtered.filter(item => {
+    const name = item.name.toLowerCase().trim();
+    
+    // Keep only legitimate certifications
+    const legitimateCertPatterns = [
+      /aws|azure|gcp|google cloud/i,
+      /cisco|ccna|ccnp|ccie/i,
+      /oracle|microsoft|ibm/i,
+      /pmp|scrum|agile|prince2/i,
+      /cissp|cism|cisa|ceh|security\+/i,
+      /comptia|network\+|a\+|linux\+/i,
+      /certified|certificate|certification/i,
+    ];
+    
+    return legitimateCertPatterns.some(pattern => pattern.test(name)) || 
+           name.length > 5; // Allow longer certification names
+  });
+};
+
+// Enhanced experience filtering
+const filterExperience = (items: ExtractedItem[]): ExtractedItem[] => {
+  const filtered = filterQualityData(items);
+  
+  return filtered.filter(item => {
+    const name = item.name.toLowerCase().trim();
+    
+    // Keep only meaningful experience requirements
+    const validExperiencePatterns = [
+      /\d+.*year/i,
+      /\d+.*month/i,
+      /entry.level/i,
+      /junior|senior|mid.level|intermediate/i,
+      /minimum|maximum|at least|up to/i,
+    ];
+    
+    return validExperiencePatterns.some(pattern => pattern.test(name));
+  });
+};
+
+// Transform backend data to frontend format with enhanced filtering
 const transformBackendData = (backendData: BackendReportData): ReportData => {
   return {
     skills: {
       title: "Top Technical Skills",
-      items: backendData.technical_skills || [],
+      items: filterSkills(backendData.technical_skills || []),
     },
     certifications: {
       title: "Most Valued Certifications",
-      items: backendData.certifications || [],
+      items: filterCertifications(backendData.certifications || []),
     },
     experience: {
       title: "Experience Requirements",
-      items: backendData.experience_requirements || [],
+      items: filterExperience(backendData.experience_requirements || []),
     },
     metadata: {
       total_jobs_found: backendData.total_jobs_found,

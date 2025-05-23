@@ -1,63 +1,99 @@
-# InteliJob 🔍
+# InteliJob 🚀
 
-A powerful tool that analyzes job postings to extract the most frequently mentioned skills, certifications, and experience requirements using live job data and advanced NLP processing.
+**Transform job postings into actionable career insights**
 
-## ✨ **Features**
-- 🎯 **Live Job Data** - Real job postings from major job boards
-- 🧠 **Advanced NLP** - spaCy processing for accurate skill extraction
-- 📊 **Smart Analysis** - Skills, certifications, and experience trends
-- 🎨 **Professional UI** - Dark theme with polished UX
-- ⚡ **Production Ready** - Comprehensive error handling and testing
-
-## 🚀 **Quick Start**
-
-```bash
-# 1. Setup environment (optional - for live data)
-cp backend/env.example backend/.env
-# Edit backend/.env with your RapidAPI key
-
-# 2. Start Backend
-cd backend && python start.py
-
-# 3. Start Frontend (new terminal)
-npm run dev
-
-# 4. Open http://localhost:5173
-```
-
-## 📚 **Documentation**
-
-**→ Complete documentation**: [`docs/`](./docs/)
-
-- **[Setup & Deployment](./docs/DEPLOYMENT_GUIDE.md)** - Development to production
-- **[Backend Guide](./docs/BACKEND_GUIDE.md)** - API docs and backend details
-- **[Current Status](./docs/SETUP_COMPLETE.md)** - What's built and working
-- **[Project Vision](./docs/project-vision.md)** - Original goals and roadmap
-
-## ⚡ **Production Ready**
-
-✅ Backend with spaCy NLP working  
-✅ Frontend with React + dark theme  
-✅ Complete test suite (5/5 passing)  
-✅ Production deployment ready  
-
-**Only missing**: RapidAPI key for live job data
-
-## ✅ **Verify Setup**
-
-Run the end-to-end test:
-```bash
-cd backend && python test_e2e.py
-```
-Should show: **5/5 tests passed** ✅
-
-## 🛠️ **Tech Stack**
-
-- **Backend**: FastAPI + spaCy + Python
-- **Frontend**: React + Chakra UI + TypeScript  
-- **API**: JSearch via RapidAPI
-- **Analysis**: 100+ technical skills + certification patterns
+A professional job market intelligence platform that analyzes job postings to extract skills, certifications, and experience requirements with AI-powered insights.
 
 ---
 
-**Need help?** Check the [`docs/`](./docs/) folder for complete guides! 🚀
+## ✨ **Key Features**
+
+🔍 **Smart Job Analysis**
+- Intelligent text extraction using spaCy NLP
+- Advanced data filtering to remove nonsensical results
+- Real-time market analytics and insights
+
+📊 **Interactive Analytics Dashboard**
+- Skills, certifications, and experience analysis
+- Market competition analysis with AI recommendations
+- CSV export and advanced filtering capabilities
+
+🎯 **Professional UX**
+- Modern responsive interface with dark theme
+- Real-time search suggestions and saved search history
+- Enhanced form validation and quality scoring
+
+---
+
+## 🚀 **Quick Start**
+
+### **Live Demo**
+- **Frontend**: [intelijob.netlify.app](https://intelijob.netlify.app/)
+- **Backend API**: [intelijob-backend.onrender.com](https://intelijob-backend.onrender.com/)
+
+### **Local Development**
+
+**Prerequisites:**
+- Node.js 16+ and npm
+- Python 3.9+ 
+
+**Frontend Setup:**
+```bash
+npm install
+npm run dev
+# Visit http://localhost:5174
+```
+
+**Backend Setup:**
+```bash
+cd backend
+pip install -r requirements.txt
+python main.py
+# API available at http://localhost:8000
+```
+
+---
+
+## 📊 **How It Works**
+
+1. **Input**: Enter job title and location
+2. **Analysis**: AI extracts skills, certifications, and requirements
+3. **Insights**: Get market intelligence and career recommendations
+4. **Export**: Download results as CSV for further analysis
+
+---
+
+## 🛠️ **Tech Stack**
+
+- **Frontend**: React 18 + TypeScript + Chakra UI
+- **Backend**: FastAPI + spaCy + JSearch API
+- **Deployment**: Netlify + Render
+- **Data**: Advanced NLP processing with smart filtering
+
+---
+
+## 📚 **Documentation**
+
+- [Complete Setup Guide](docs/SETUP_COMPLETE.md)
+- [Backend Configuration](docs/BACKEND_GUIDE.md)
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+- [Project Vision & Roadmap](docs/PROJECT_VISION.md)
+
+---
+
+## 🎯 **Examples**
+
+Try searching for:
+- "Software Engineer" in "San Francisco, CA"
+- "Data Scientist" in "Remote"
+- "Product Manager" in "New York, NY"
+
+The platform will analyze job postings and provide comprehensive market insights including skill demand, certification requirements, and AI-powered career recommendations.
+
+---
+
+## 📄 **License**
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+**© 2024 InteliJob. Empowering your career journey.**
