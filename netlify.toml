@@ -24,21 +24,20 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
 
     # Permissions-Policy allows you to control which browser features can be used by the page.
-    # It\'s good practice to disable features not in use. This is a restrictive example; adjust as needed.
+    # It's good practice to disable features not in use. This is a restrictive example; adjust as needed.
     # Example: disable microphone, geolocation, camera by default.
     Permissions-Policy = "microphone=(), geolocation=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), sync-xhr=()"
 
     # Content-Security-Policy (CSP) helps prevent XSS and data injection attacks.
     # This is a STARTER policy. It needs to be carefully configured and tested.
-    # \'self\' allows content from your own domain.
-    # \'unsafe-inline\' is often needed for styles/scripts directly in HTML (common in some JS frameworks or for small things) but is less secure.
-    # \'unsafe-eval\' might be needed if your JS uses eval(), which should be avoided if possible.
+    # 'self' allows content from your own domain.
+    # 'unsafe-inline' is often needed for styles/scripts directly in HTML (common in some JS frameworks or for small things) but is less secure.
+    # 'unsafe-eval' might be needed if your JS uses eval(), which should be avoided if possible.
     # You WILL likely need to add other sources, e.g., for fonts from Google Fonts, scripts from CDNs, your API endpoint for connect-src, etc.
     #
     # Start with this, test thoroughly, and use browser console errors to identify what needs to be added.
-    # For example, if you use Google Fonts, you\'d add https://fonts.googleapis.com and https://fonts.gstatic.com to style-src and font-src.
-    # If your API is at https://intelijob-backend.onrender.com, you\'d add that to connect-src.
-    Content-Security-Policy = "default-src \'self\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'; style-src \'self\' \'unsafe-inline\' https://fonts.googleapis.com; font-src \'self\' https://fonts.gstatic.com; img-src \'self\' data:; connect-src \'self\' https://intelijob-backend.onrender.com; object-src \'none\'; frame-ancestors \'self\';"
-    # Consider removing \'unsafe-inline\' and \'unsafe-eval\' if possible for better security.
-    # \'unsafe-eval\' is particularly risky. Many modern frameworks avoid it.
-    # For Chakra UI (which you use), you might need \'unsafe-inline\' for styles if you\'re not using a strict CSP-compatible setup with it. 
+    # For example, if you use Google Fonts, you'd add https://fonts.googleapis.com and https://fonts.gstatic.com to style-src and font-src.
+    # If your API is at https://intelijob-backend.onrender.com, you'd add that to connect-src.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://intelijob-backend.onrender.com; object-src 'none'; frame-ancestors 'self';"    # Consider removing 'unsafe-inline' and 'unsafe-eval' if possible for better security.
+    # 'unsafe-eval' is particularly risky. Many modern frameworks avoid it.
+    # For Chakra UI (which you use), you might need 'unsafe-inline' for styles if you're not using a strict CSP-compatible setup with it. 
