@@ -4,7 +4,7 @@ import asyncio
 from typing import List, Dict, Optional, Any
 from collections import Counter
 import httpx
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -272,7 +272,7 @@ async def root():
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
 @limiter.limit(settings.rate_limit_default)
-async def analyze_jobs(http_request: Request, request: JobSearchRequest):
+async def analyze_jobs(http_request: Request, request: JobSearchRequest = Body(...)):
     """Main endpoint to analyze job postings"""
     try:
         # Map time range to JSearch API format
