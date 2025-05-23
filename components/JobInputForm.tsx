@@ -545,8 +545,8 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
                 borderColor={useColorModeValue('gray.300', 'gray.600')}
                 _hover={{ 
                   borderColor: 'teal.400',
-                  bg: useColorModeValue('teal.50', 'teal.900'),
-                  color: 'teal.600'
+                  bg: useColorModeValue('teal.50', 'teal.800'),
+                  color: useColorModeValue('teal.700', 'teal.100')
                 }}
                 transition="all 0.2s"
               >
@@ -654,8 +654,8 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
                 borderColor={useColorModeValue('gray.300', 'gray.600')}
                 _hover={{ 
                   borderColor: 'teal.400',
-                  bg: useColorModeValue('teal.50', 'teal.900'),
-                  color: 'teal.600'
+                  bg: useColorModeValue('teal.50', 'teal.800'),
+                  color: useColorModeValue('teal.700', 'teal.100')
                 }}
                 transition="all 0.2s"
                 whiteSpace="nowrap"
