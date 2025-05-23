@@ -104,6 +104,7 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [nearbyLocations, setNearbyLocations] = useState<string[]>(FALLBACK_LOCATIONS);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [lastLocationFetch, setLastLocationFetch] = useState<number>(0);
 
   const bg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.300', 'gray.500');
@@ -148,9 +149,23 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
   }, [title]);
 
   const getNearbyLocations = async () => {
+    // Prevent multiple rapid clicks (cooldown period of 5 seconds)
+    const now = Date.now();
+    if (locationLoading || (now - lastLocationFetch < 5000)) {
+      return;
+    }
+
     setLocationLoading(true);
+    setLastLocationFetch(now);
     
     try {
+      // Check if geolocation is available
+      if (!navigator.geolocation) {
+        console.log('Geolocation not supported, using fallback locations');
+        setNearbyLocations(FALLBACK_LOCATIONS);
+        return;
+      }
+
       // Get user's coordinates
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -607,8 +622,13 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
               onClick={getNearbyLocations}
               isLoading={locationLoading}
               loadingText="Finding"
+              isDisabled={locationLoading || (Date.now() - lastLocationFetch < 5000)}
               color="teal.600"
               _hover={{ bg: useColorModeValue('teal.50', 'teal.900') }}
+              _disabled={{ 
+                color: useColorModeValue('gray.400', 'gray.600'),
+                cursor: 'not-allowed'
+              }}
               fontSize="xs"
               fontWeight="medium"
               px={2}
