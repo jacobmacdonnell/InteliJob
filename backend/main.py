@@ -272,7 +272,7 @@ async def root():
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
 @limiter.limit(settings.rate_limit_default)
-async def analyze_jobs(request: JobSearchRequest, http_request: Request):
+async def analyze_jobs(http_request: Request, request: JobSearchRequest):
     """Main endpoint to analyze job postings"""
     try:
         # Map time range to JSearch API format
