@@ -47,6 +47,10 @@ class Settings:
         # API Rate Limiting (example, not implemented in current API)
         self.api_timeout: int = 30 # For httpx client calls
         # self.max_jobs_per_request: int = 50 # Example if you were to implement rate limits
+
+        # Rate Limiting Configuration
+        self.rate_limit_default: str = os.getenv("RATE_LIMIT_DEFAULT", "100/minute")
+        self.rate_limit_strategy: str = os.getenv("RATE_LIMIT_STRATEGY", "moving-window") # or "fixed-window", "fixed-window-elastic-expiry"
         
     def is_production(self) -> bool:
         return self.environment.lower() == "production"

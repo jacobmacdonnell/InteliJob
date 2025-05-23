@@ -4,10 +4,16 @@ import asyncio
 from typing import List, Dict, Optional, Any
 from collections import Counter
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+
+# slowapi imports
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 # Import settings from config.py
 from config import settings
@@ -18,8 +24,21 @@ load_dotenv()
 # Initialize FastAPI app
 app = FastAPI(title="Job Intelligence Scanner API", version="1.0.0")
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address, 
+                  default_limits=[settings.rate_limit_default],
+                  strategy=settings.rate_limit_strategy,
+                  # storage_uri="memory://" # Default, suitable for single process. For multi-process (Gunicorn workers), Redis or Memcached is needed.
+                  )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Add SlowAPIMiddleware - this must be added BEFORE the routes are defined if you want to use decorators on routes
+# However, for global limits or if you apply limits directly in path operations, its position is less critical.
+# For now, we will apply it to specific routes using decorators.
+
 # CORS Middleware
-print(f"DEBUG: CORS Origins loaded by FastAPI app: {settings.cors_origins}")
+# print(f"DEBUG: CORS Origins loaded by FastAPI app: {settings.cors_origins}") # DEBUG line removed
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins, # Use the loaded setting
@@ -246,12 +265,14 @@ def aggregate_and_rank(items: List[str], top_n: int = 10) -> List[Dict[str, Any]
     return ranked_items
 
 @app.get("/")
+@limiter.exempt
 async def root():
     """Health check endpoint"""
     return {"message": "Job Intelligence Scanner API", "status": "running"}
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
-async def analyze_jobs(request: JobSearchRequest):
+@limiter.limit(settings.rate_limit_default)
+async def analyze_jobs(request: JobSearchRequest, http_request: Request):
     """Main endpoint to analyze job postings"""
     try:
         # Map time range to JSearch API format
@@ -331,6 +352,7 @@ async def analyze_jobs(request: JobSearchRequest):
         raise HTTPException(status_code=500, detail=f"Analysis error: {str(e)}")
 
 @app.get("/health")
+@limiter.exempt
 async def health_check():
     """Detailed health check"""
     return {
