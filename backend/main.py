@@ -19,7 +19,6 @@ load_dotenv()
 app = FastAPI(title="Job Intelligence Scanner API", version="1.0.0")
 
 # CORS Middleware
-print(f"DEBUG: CORS Origins loaded by FastAPI app: {settings.cors_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins, # Use the loaded setting
