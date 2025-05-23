@@ -1,8 +1,9 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App'; // App is the default export from App.tsx
 import { ChakraProvider, extendTheme, type ThemeConfig } from '@chakra-ui/react';
+import { JobScanProvider } from './contexts/JobScanContext';
+import './index.css'; // Assuming your global CSS is index.css in the root
 
 const config: ThemeConfig = {
   initialColorMode: 'dark',
@@ -125,7 +126,9 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <ChakraProvider theme={theme}>
-      <App />
+      <JobScanProvider>
+        <App />
+      </JobScanProvider>
     </ChakraProvider>
   </React.StrictMode>
 );
