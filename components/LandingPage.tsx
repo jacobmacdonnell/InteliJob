@@ -1,45 +1,62 @@
 import React from 'react';
-import { Box, Heading, Text, VStack, Button, Flex, SimpleGrid, Icon, useColorModeValue } from '@chakra-ui/react';
-import { FaCheckCircle, FaShieldAlt, FaDollarSign, FaRocket } from 'react-icons/fa'; // Example icons
+import { Box, Heading, Text, VStack, Button, Flex, SimpleGrid, Icon, useColorModeValue, Fade } from '@chakra-ui/react'; // Import Fade
+import { FaCheckCircle, FaShieldAlt, FaDollarSign, FaRocket, FaArrowRight, FaRegLightbulb, FaChartLine } from 'react-icons/fa'; // Added FaRegLightbulb, FaChartLine
 
 // Placeholder data for pricing tiers
 const pricingTiers = [
   {
-    name: 'Basic',
+    name: 'Starter', // Renamed
     price: '$10/month',
-    features: ['Feature 1', 'Feature 2', 'Feature 3'],
-    icon: FaCheckCircle,
+    features: [
+      "AI Job Matching (100 searches/mo)",
+      "Basic Resume Analysis",
+      "Email Support"
+    ],
+    icon: FaCheckCircle, // Stays the same
+    buttonText: 'Choose Starter', // New button text
   },
   {
     name: 'Pro',
     price: '$30/month',
-    features: ['All Basic features', 'Feature 4', 'Feature 5'],
-    icon: FaShieldAlt,
+    features: [
+      "Unlimited AI Job Matching",
+      "In-Depth Resume Analysis & Keywords",
+      "Real-Time Market Insights",
+      "Priority Email & Chat Support"
+    ],
+    icon: FaShieldAlt, // Stays the same
+    buttonText: 'Choose Pro', // New button text
   },
   {
     name: 'Enterprise',
     price: 'Contact Us',
-    features: ['All Pro features', 'Custom solutions', 'Dedicated support'],
-    icon: FaDollarSign,
+    features: [
+      "All Pro Features",
+      "Custom AI Model Tuning",
+      "Dedicated Account Manager",
+      "API Access & Integrations"
+    ],
+    icon: FaDollarSign, // Stays the same
+    buttonText: 'Contact Sales', // New button text
   },
 ];
 
 // Placeholder data for features
 const features = [
   {
-    title: 'Amazing Feature 1',
-    description: 'Description for amazing feature 1 that will wow your customers.',
+    title: 'AI-Powered Job Matching',
+    description: 'Stop scrolling endlessly. Our intelligent algorithms match your unique skills and aspirations to the perfect job openings, saving you time and effort.',
     icon: FaRocket,
   },
   {
-    title: 'Reliable Feature 2',
-    description: 'Description for reliable feature 2, ensuring peace of mind.',
-    icon: FaShieldAlt,
+    title: 'In-Depth Resume Analysis',
+    description: 'Get actionable feedback on your resume. We identify areas for improvement and highlight keywords to ensure your application stands out to recruiters.',
+    icon: FaRegLightbulb,
   },
   {
-    title: 'Affordable Feature 3',
-    description: 'Description for affordable feature 3, providing great value.',
-    icon: FaDollarSign,
+    title: 'Real-Time Market Insights',
+    description: 'Understand industry trends, salary benchmarks, and in-demand skills. Make informed career decisions backed by current market data.',
+    icon: FaChartLine,
   },
 ];
 
@@ -54,7 +71,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
   const textColor = useColorModeValue('gray.600', 'gray.300');
   const headingColor = useColorModeValue('gray.700', 'white');
 
-  return (
+  return ( // Wrap content in Fade
+    <Fade in={true} transition={{ enter: { duration: 0.6 } }}>
     <Box>
       {/* Hero Section */}
       <Flex
@@ -67,11 +85,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
         color="white"
         textAlign="center"
       >
-        <Heading as="h1" size="2xl" fontWeight="extrabold" mb={4} textShadow="1px 1px 3px rgba(0,0,0,0.2)">
-          Welcome to InteliJob - Your Smart Career Assistant
+        <Heading as="h1" size="2xl" fontWeight="extrabold" mb={6} textShadow="1px 1px 3px rgba(0,0,0,0.2)"> {/* Increased mb slightly */}
+          Unlock Your Career Potential with InteliJob
         </Heading>
-        <Text fontSize="xl" mb={8} maxW="2xl">
-          Discover the perfect job opportunities and gain a competitive edge with our AI-powered job market intelligence.
+        <Text fontSize="xl" mb={10} maxW="3xl"> {/* Increased mb and maxW slightly */}
+          Navigate the job market with precision. Our AI-driven insights help you find the right opportunities, faster, and stand out from the competition.
         </Text>
         <Button
           colorScheme="orange"
@@ -79,19 +97,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
           onClick={onNavigateToApp}
           _hover={{ transform: 'scale(1.05)' }}
           transition="transform 0.2s ease-in-out"
+          rightIcon={<FaArrowRight />}
+          letterSpacing="wide"
         >
-          Get Started Now
+          Discover Your Next Opportunity
         </Button>
       </Flex>
 
       {/* Features Section */}
       <Box py={{ base: 16, md: 20 }} px={{ base: 4, md: 8 }} bg={sectionBg}>
         <VStack spacing={4} textAlign="center" mb={12}>
-          <Heading as="h2" size="xl" color={headingColor}>
-            Why Choose InteliJob?
+          <Heading as="h2" size="xl" color={headingColor} fontWeight="bold"> {/* Ensure bold, though default for heading */}
+            Gain a Competitive Edge
           </Heading>
           <Text fontSize="lg" color={textColor} maxW="xl">
-            We provide cutting-edge tools to help you navigate the job market effectively.
+            InteliJob equips you with intelligent tools and actionable insights for a smarter, faster job search.
           </Text>
         </VStack>
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10}>
@@ -121,11 +141,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
       {/* Pricing Section */}
       <Box py={{ base: 16, md: 20 }} px={{ base: 4, md: 8 }}>
         <VStack spacing={4} textAlign="center" mb={12}>
-          <Heading as="h2" size="xl" color={headingColor}>
-            Flexible Pricing Plans
+          <Heading as="h2" size="xl" color={headingColor} fontWeight="bold">
+            Find the Perfect Plan
           </Heading>
           <Text fontSize="lg" color={textColor} maxW="xl">
-            Choose the plan that best fits your needs and budget.
+            Start smart, go pro, or scale big. InteliJob plans are designed for every stage of your career journey.
           </Text>
         </VStack>
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10} justifyItems="center">
@@ -136,7 +156,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
               p={8}
               borderRadius="lg"
               boxShadow={tier.name === 'Pro' ? '2xl' : 'lg'}
-              spacing={5}
+              spacing={6} // Slightly increased spacing
               align="stretch"
               textAlign="center"
               borderWidth="1px"
@@ -155,7 +175,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
               <Text fontSize="2xl" fontWeight="bold" color="teal.500">
                 {tier.price}
               </Text>
-              <VStack spacing={2} align="stretch">
+              <VStack spacing={3} align="start" w="100%" px={2}> {/* Align features to start, add padding */}
                 {tier.features.map((feature, index) => (
                   <Text key={index} color={textColor}>- {feature}</Text>
                 ))}
@@ -166,7 +186,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
                 width="100%"
                 _hover={{ opacity: 0.9, transform: 'scale(1.05)' }}
                 transition="opacity 0.2s ease-in-out, transform 0.2s ease-in-out">
-                Choose Plan
+                {tier.buttonText}
               </Button>
             </VStack>
           ))}
@@ -175,11 +195,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
 
       {/* Call to Action Section */}
       <Box py={{ base: 16, md: 20 }} px={{ base: 4, md: 8 }} bg={sectionBg} textAlign="center">
-        <Heading as="h2" size="xl" color={headingColor} mb={6}>
-          Ready to Supercharge Your Job Search?
+        <Heading as="h2" size="xl" color={headingColor} fontWeight="bold" mb={6}>
+          Take Control of Your Career Path Today
         </Heading>
         <Text fontSize="lg" color={textColor} maxW="xl" mx="auto" mb={8}>
-          Join InteliJob today and take the next step in your career journey.
+          Stop waiting for opportunities and start creating them. Join thousands of successful job seekers who trust InteliJob. Sign up now and experience the future of job searching!
         </Text>
         <Button
           colorScheme="orange"
@@ -187,10 +207,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToApp }) => 
           onClick={onNavigateToApp}
           _hover={{ transform: 'scale(1.05)' }}
           transition="transform 0.2s ease-in-out"
+          rightIcon={<FaArrowRight />}
+          letterSpacing="wide"
         >
-          Sign Up for Free
+          Sign Up & Get Started
         </Button>
       </Box>
     </Box>
+    </Fade>
   );
 };
