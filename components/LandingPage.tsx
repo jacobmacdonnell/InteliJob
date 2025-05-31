@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 const pricingTiers = [
   {
     name: 'Starter',
-    price: '$10/month',
+    price: '$5/month',
     features: [
       "AI Job Matching (100 searches/mo)",
       "Basic Resume Analysis",
@@ -18,7 +18,7 @@ const pricingTiers = [
   },
   {
     name: 'Pro',
-    price: '$30/month',
+    price: '$15/month',
     features: [
       "Unlimited AI Job Matching",
       "In-Depth Resume Analysis & Keywords",
@@ -29,8 +29,8 @@ const pricingTiers = [
     buttonText: 'Choose Pro',
   },
   {
-    name: 'Enterprise',
-    price: 'Contact Us',
+    name: 'Elite',
+    price: '$30/month',
     features: [
       "All Pro Features",
       "Custom AI Model Tuning",
@@ -38,7 +38,7 @@ const pricingTiers = [
       "API Access & Integrations"
     ],
     icon: FaDollarSign,
-    buttonText: 'Contact Sales',
+    buttonText: 'Choose Elite',
   },
 ];
 
@@ -204,13 +204,16 @@ const LandingPage: React.FC = () => {
               Start smart, go pro, or scale big. InteliJob plans are designed for every stage of your career journey.
             </Text>
           </VStack>
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10} justifyItems="center">
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10} justifyItems="center" alignItems="stretch">
             {pricingTiers.map((tier, index) => {
               const isPro = tier.name === 'Pro';
-              const isEnterprise = tier.name === 'Enterprise';
+              const isElite = tier.name === 'Elite';
               return (
-                <Box
+                <Flex
                   key={tier.name}
+                  direction="column"
+                  align="center"
+                  justify="flex-start"
                   bg={isPro ? 'teal.500' : cardBg}
                   color={isPro ? 'white' : headingColor}
                   p={10}
@@ -246,17 +249,17 @@ const LandingPage: React.FC = () => {
                       Most Popular
                     </Box>
                   )}
-                  <VStack spacing={4} align="stretch" textAlign="center">
-                    <Icon as={tier.icon} w={12} h={12} color={isPro ? 'white' : accentColor} mx="auto" />
-                    <Heading as="h3" size="lg" color={isPro ? 'white' : headingColor} fontWeight="bold">
+                  <VStack spacing={4} align="center" textAlign="center" w="100%">
+                    <Icon as={tier.icon} w={12} h={12} color={isPro ? 'white' : accentColor} />
+                    <Heading as="h3" size="lg" color={isPro ? 'white' : headingColor} fontWeight="bold" textAlign="center" w="100%">
                       {tier.name}
                     </Heading>
-                    <Text fontSize="3xl" fontWeight="extrabold" color={isPro ? 'white' : accentColor}>
+                    <Text fontSize="3xl" fontWeight="extrabold" color={isPro ? 'white' : accentColor} textAlign="center" w="100%">
                       {tier.price}
                     </Text>
-                    <VStack spacing={3} align="start" w="100%" px={2}>
+                    <VStack spacing={3} align="flex-start" w="100%" px={0} textAlign="left">
                       {tier.features.map((feature, idx) => (
-                        <HStack key={idx} spacing={2}>
+                        <HStack key={idx} spacing={2} align="center">
                           <Icon as={FaCheckCircle} color={isPro ? 'white' : 'teal.400'} w={5} h={5} />
                           <Text color={isPro ? 'whiteAlpha.900' : textColor} fontSize="md">{feature}</Text>
                         </HStack>
@@ -264,27 +267,27 @@ const LandingPage: React.FC = () => {
                     </VStack>
                     <Button
                       colorScheme={isPro ? 'orange' : 'teal'}
-                      variant={isEnterprise ? 'outline' : 'solid'}
+                      variant={isElite ? 'outline' : 'solid'}
                       size="lg"
-                      mt={4}
+                      mt={6}
                       width="100%"
                       fontWeight="bold"
                       fontSize="md"
                       _hover={isPro ? { bg: 'orange.400', color: 'white' } : { opacity: 0.9, transform: 'scale(1.04)' }}
                       transition="all 0.2s"
-                      as={isEnterprise ? undefined : Link}
-                      to={isEnterprise ? undefined : '/app'}
-                      aria-label={isEnterprise ? 'Contact Sales' : `Choose ${tier.name}`}
+                      as={isElite ? undefined : Link}
+                      to={isElite ? undefined : '/app'}
+                      aria-label={isElite ? 'Contact Sales' : `Choose ${tier.name}`}
                     >
                       {tier.buttonText}
                     </Button>
-                    {isEnterprise && (
-                      <Text color={textColor} fontSize="sm" mt={2}>
+                    {isElite && (
+                      <Text color={textColor} fontSize="sm" mt={2} textAlign="left">
                         Custom pricing & integrations. <br />Contact us for a tailored solution.
                       </Text>
                     )}
                   </VStack>
-                </Box>
+                </Flex>
               );
             })}
           </SimpleGrid>
