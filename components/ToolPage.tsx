@@ -1,14 +1,11 @@
 import React from 'react';
 import {
   Box,
-  Heading,
-  Text,
   VStack,
   Container,
   Icon,
   Flex,
-  useColorModeValue,
-  HStack
+  useColorModeValue
 } from '@chakra-ui/react';
 import { JobInputForm } from './JobInputForm';
 import { JobReportCard } from './JobReportCard';
@@ -17,26 +14,12 @@ import { ErrorMessage } from './ErrorMessage';
 import { RateLimitNotification } from './RateLimitNotification';
 import { useJobScan } from '../contexts/JobScanContext';
 
-const SearchDocIcon = (props: any) => (
-  <Icon viewBox="0 0 24 24" {...props}>
-    <path 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="1.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z M10.5 6h3m-3 3h3m-3 3h3m-5.25 3H11.25" 
-    />
-  </Icon>
-);
-
 const ToolPage: React.FC = () => {
   const { reportData, isLoading, error, handleScan } = useJobScan();
   const bgGradient = useColorModeValue(
     'linear(to-br, gray.50, blue.50)',
     'linear(to-br, gray.900, gray.800)'
   );
-  const headerBg = useColorModeValue('white', 'gray.800');
   const shadowColor = useColorModeValue('xl', '2xl');
 
   return (

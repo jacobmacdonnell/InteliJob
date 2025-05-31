@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Heading, Text, VStack, Button, Flex, SimpleGrid, Icon, useColorModeValue, Fade, Container, HStack, Stack, Divider } from '@chakra-ui/react';
+import { Box, Heading, Text, VStack, Button, Flex, SimpleGrid, Icon, useColorModeValue, Fade, Container, HStack, Divider } from '@chakra-ui/react';
 import { FaCheckCircle, FaShieldAlt, FaDollarSign, FaRocket, FaArrowRight, FaRegLightbulb, FaChartLine, FaBriefcase, FaUserTie, FaGlobe, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
@@ -9,9 +9,11 @@ const pricingTiers = [
     name: 'Starter',
     price: '$5/month',
     features: [
-      "AI Job Matching (100 searches/mo)",
-      "Basic Resume Analysis",
-      "Email Support"
+      "100 job analyses per month",
+      "AI-powered skills & requirements extraction",
+      "Basic resume analysis",
+      "CSV export of results",
+      "Email support"
     ],
     icon: FaCheckCircle,
     buttonText: 'Choose Starter',
@@ -20,10 +22,11 @@ const pricingTiers = [
     name: 'Pro',
     price: '$15/month',
     features: [
-      "Unlimited AI Job Matching",
-      "In-Depth Resume Analysis & Keywords",
-      "Real-Time Market Insights",
-      "Priority Email & Chat Support"
+      "Unlimited job analyses",
+      "Advanced skills, certifications, and experience analytics",
+      "Real-time market insights & competition analysis",
+      "Interactive dashboard (filter, sort, search)",
+      "Priority email & chat support"
     ],
     icon: FaShieldAlt,
     buttonText: 'Choose Pro',
@@ -32,10 +35,11 @@ const pricingTiers = [
     name: 'Elite',
     price: '$30/month',
     features: [
-      "All Pro Features",
-      "Custom AI Model Tuning",
-      "Dedicated Account Manager",
-      "API Access & Integrations"
+      "All Pro features",
+      "Custom AI model tuning",
+      "Dedicated account manager",
+      "API access & integrations",
+      "Early access to new features"
     ],
     icon: FaDollarSign,
     buttonText: 'Choose Elite',
@@ -205,7 +209,7 @@ const LandingPage: React.FC = () => {
             </Text>
           </VStack>
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10} justifyItems="center" alignItems="stretch">
-            {pricingTiers.map((tier, index) => {
+            {pricingTiers.map((tier) => {
               const isPro = tier.name === 'Pro';
               const isElite = tier.name === 'Elite';
               return (
@@ -259,9 +263,11 @@ const LandingPage: React.FC = () => {
                     </Text>
                     <VStack spacing={3} align="flex-start" w="100%" px={0} textAlign="left">
                       {tier.features.map((feature, idx) => (
-                        <HStack key={idx} spacing={2} align="center">
-                          <Icon as={FaCheckCircle} color={isPro ? 'white' : 'teal.400'} w={5} h={5} />
-                          <Text color={isPro ? 'whiteAlpha.900' : textColor} fontSize="md">{feature}</Text>
+                        <HStack key={idx} spacing={3} align="flex-start" w="100%">
+                          <Box pt={1} minW={5} display="flex" justifyContent="center">
+                            <Icon as={FaCheckCircle} color={isPro ? 'white' : 'teal.400'} w={5} h={5} />
+                          </Box>
+                          <Text color={isPro ? 'whiteAlpha.900' : textColor} fontSize="md" lineHeight="1.6" w="100%">{feature}</Text>
                         </HStack>
                       ))}
                     </VStack>
@@ -283,7 +289,7 @@ const LandingPage: React.FC = () => {
                     </Button>
                     {isElite && (
                       <Text color={textColor} fontSize="sm" mt={2} textAlign="left">
-                        Custom pricing & integrations. <br />Contact us for a tailored solution.
+                        Custom AI, integrations, and dedicated support. <br />Contact us for a tailored solution.
                       </Text>
                     )}
                   </VStack>
