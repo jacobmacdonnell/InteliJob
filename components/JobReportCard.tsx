@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'; // Added Chevron icons
 import type { ReportData, ReportSection } from '../types';
+import { KeyRequirementsSnapshot } from './KeyRequirementsSnapshot'; // Import KeyRequirementsSnapshot
 
 interface JobReportCardProps {
   data: ReportData | null;
@@ -68,6 +69,8 @@ const SectionDisplay: React.FC<{ section: ReportSection }> = ({ section }) => {
             boxShadow="sm"
             _hover={{ bg: hoverBg }}
             transition="background-color 0.2s ease-in-out"
+            borderLeftWidth="3px"
+            borderLeftColor={useColorModeValue('blue.400', 'blue.300')}
           >
             <HStack justify="space-between" align="flex-start">
               <Text fontWeight="semibold" fontSize="md" color={textColor} flex={1} mb={1}>
@@ -80,30 +83,35 @@ const SectionDisplay: React.FC<{ section: ReportSection }> = ({ section }) => {
 
             {item.sources && item.sources.length > 0 && (
               <Box mt={2} pl={1}>
-                <Text fontSize="xs" fontWeight="medium" color={mutedColor} mb={0.5}>
+                <Text fontSize="sm" fontWeight="semibold" color={mutedColor} mb={1}>
                   Mentioned in:
                 </Text>
-                <VStack spacing={1} align="stretch">
+                <VStack spacing={1.5} align="stretch">
                   {item.sources.map((source, sourceIndex) => (
-                    <HStack key={sourceIndex} spacing={2} fontSize="sm">
-                      <Icon as={ExternalLinkIcon} color={linkColor} w={3} h={3} flexShrink={0} />
-                      {source.job_url ? (
-                        <Link
-                          href={source.job_url}
-                          isExternal
-                          color={linkColor}
-                          fontWeight="normal"
-                          _hover={{ textDecoration: 'underline' }}
-                          fontSize="sm"
-                          lineHeight="short"
-                        >
-                          {source.job || 'View Job Post'} (Company: {source.company || 'N/A'})
-                        </Link>
-                      ) : (
-                        <Text color={mutedColor} fontSize="sm" lineHeight="short">
-                          {source.job || 'Job Post'} (Company: {source.company || 'N/A'}) - No direct link
-                        </Text>
-                      )}
+                    <HStack key={sourceIndex} spacing={2} alignItems="flex-start"> {/* alignItems to flex-start */}
+                      <Box pt={1}> {/* Adjust pt to vertically align bullet */}
+                        <Box as="span" display="inline-block" borderRadius="full" width="6px" height="6px" bg={useColorModeValue('gray.400', 'gray.500')} />
+                      </Box>
+                      <HStack spacing={1.5} flex={1}> {/* New HStack for icon and text */}
+                        <Icon as={ExternalLinkIcon} color={linkColor} w={3} h={3} flexShrink={0} mt="1px" /> {/* mt for alignment */}
+                        {source.job_url ? (
+                          <Link
+                            href={source.job_url}
+                            isExternal
+                            color={linkColor}
+                            fontWeight="normal"
+                            _hover={{ textDecoration: 'underline' }}
+                            fontSize="sm"
+                            lineHeight="short"
+                          >
+                            {source.job || 'View Job Post'} (Company: {source.company || 'N/A'})
+                          </Link>
+                        ) : (
+                          <Text color={mutedColor} fontSize="sm" lineHeight="short">
+                            {source.job || 'Job Post'} (Company: {source.company || 'N/A'}) - No direct link
+                          </Text>
+                        )}
+                      </HStack>
                     </HStack>
                   ))}
                 </VStack>
@@ -115,7 +123,7 @@ const SectionDisplay: React.FC<{ section: ReportSection }> = ({ section }) => {
           </Box>
         ))}
         {sortedItems.length > 3 && (
-          <Flex justifyContent="center" mt={2}>
+          <Flex justifyContent="center" mt={3}>
             <Button
               size="sm"
               variant="outline"
@@ -156,7 +164,9 @@ export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => {
         Job Requirements Overview
       </Heading>
 
-      <VStack spacing={4} align="stretch"> {/* spacing changed from 5 to 4 */}
+      <KeyRequirementsSnapshot reportData={data} /> {/* Integrated here */}
+
+      <VStack spacing={4} align="stretch"> {/* Current spacing is 4, this is for sections */}
         {/* Pass the whole section object to SectionDisplay */}
         {skillsSection && skillsSection.items.length > 0 && <SectionDisplay section={skillsSection} />}
         {certificationsSection && certificationsSection.items.length > 0 && <SectionDisplay section={certificationsSection} />}
@@ -170,7 +180,7 @@ export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => {
         {(!skillsSection || skillsSection.items.length === 0) &&
          (!certificationsSection || certificationsSection.items.length === 0) &&
          (!experienceSection || experienceSection.items.length === 0) &&
-         (!data.total_jobs_found || data.total_jobs_found === 0) && // Check if no jobs were found at all
+         (data.metadata && (!data.metadata.total_jobs_found || data.metadata.total_jobs_found === 0)) && // Check metadata
           <Text color={mutedColor} textAlign="center">No specific requirements data extracted from the analyzed jobs.</Text>
         }
       </VStack>
