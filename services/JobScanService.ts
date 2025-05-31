@@ -117,16 +117,16 @@ const filterExperience = (items: ExtractedItem[]): ExtractedItem[] => {
 const transformBackendData = (backendData: BackendReportData): ReportData => {
   return {
     skills: {
-      title: "Top Technical Skills",
-      items: filterSkills(backendData.technical_skills || []),
+      title: backendData.skills?.title || "Top Technical Skills", // Use backend title, with fallback
+      items: filterSkills(backendData.skills?.items || []),
     },
     certifications: {
-      title: "Most Valued Certifications",
-      items: filterCertifications(backendData.certifications || []),
+      title: backendData.certifications?.title || "Most Valued Certifications", // Use backend title, with fallback
+      items: filterCertifications(backendData.certifications?.items || []),
     },
     experience: {
-      title: "Experience Requirements",
-      items: filterExperience(backendData.experience_requirements || []),
+      title: backendData.experience?.title || "Experience Requirements", // Use backend title, with fallback
+      items: filterExperience(backendData.experience?.items || []),
     },
     metadata: {
       total_jobs_found: backendData.total_jobs_found,

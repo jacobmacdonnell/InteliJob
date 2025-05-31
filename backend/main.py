@@ -328,14 +328,18 @@ TECH_SKILLS_KEYWORDS = [
     'selenium', 'cypress', 'junit', 'pytest', 'jest', 'mocha', 'postman', 'jmeter',
 ]
 
-# Experience patterns
+# Updated Experience patterns
 EXPERIENCE_PATTERNS = [
-    r'(\d+)[\+\-\s]*(?:to\s+)?(\d+)?\+?\s*(?:years?)\s*(?:of\s*)?(?:experience|exp)',
-    r'(\d+)[\+\-\s]*(?:years?)\s*(?:of\s*)?(?:experience|exp)',
-    r'minimum\s*(?:of\s*)?(\d+)[\+\-\s]*(?:years?)',
-    r'at\s*least\s*(\d+)[\+\-\s]*(?:years?)',
-    r'(\d+)[\+\-\s]*(?:years?)\s*(?:in|with|of)',
-    r'(\d+)[\+\-\s]*(?:yrs?)\s*(?:experience|exp)',
+    # Pattern for "X-Y years" or "X to Y years"
+    r'(\d+)\s*(?:to|-)\s*(\d+)\s*\+?\s*years?',
+    # Pattern for "X+ years" or "minimum X years" or "at least X years"
+    r'(?:minimum|min|at least|over|more than)\s*(\d+)\s*\+?\s*years?',
+    r'(\d+)\+\s*years?',
+    # Pattern for "X years" (specific number)
+    r'(\d+)\s*years?',
+    # Pattern for entry level (less common, but good to have)
+    r'entry\s*level',
+    r'junior\s*level',
 ]
 
 async def fetch_jobs_from_jsearch(job_title: str, location: str = None, date_posted: str = "today") -> List[Dict]:
@@ -454,22 +458,65 @@ def extract_technical_skills_with_sources(text: str, job_title: str, company: st
     
     return skills
 
+def normalize_experience_text(text: str) -> Optional[str]:
+    text = text.lower().strip()
+
+    # Pattern for "X-Y years" or "X to Y years"
+    match = re.fullmatch(r'(\d+)\s*(?:to|-)\s*(\d+)\s*\+?\s*years?', text)
+    if match:
+        num1, num2 = int(match.group(1)), int(match.group(2))
+        return f"{min(num1, num2)}-{max(num1, num2)} Years"
+
+    # Pattern for "X+ years" or "minimum X years" or "at least X years"
+    match = re.fullmatch(r'(?:minimum|min|at least|over|more than)\s*(\d+)\s*\+?\s*years?', text)
+    if match:
+        return f"{match.group(1)}+ Years"
+    match = re.fullmatch(r'(\d+)\+\s*years?', text)
+    if match:
+        return f"{match.group(1)}+ Years"
+
+    # Pattern for "X years" (specific number)
+    match = re.fullmatch(r'(\d+)\s*years?', text)
+    if match:
+        return f"{match.group(1)} Years"
+
+    # Pattern for entry level
+    if 'entry level' in text or 'entry-level' in text:
+        return "Entry Level"
+    if 'junior level' in text:
+         return "Junior Level"
+
+    numbers = re.findall(r'\d+', text)
+    if len(numbers) == 1:
+        return f"{numbers[0]} Years"
+    elif len(numbers) == 2:
+        return f"{min(int(numbers[0]), int(numbers[1]))}-{max(int(numbers[0]), int(numbers[1]))} Years"
+
+    if 'year' in text or 'exp' in text or 'yr' in text:
+        return text.capitalize()
+    return None
+
 def extract_experience_with_sources(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
-    """Extract years of experience with job source information"""
     experience_requirements = []
-    
+    processed_texts = set()
+
     for pattern in EXPERIENCE_PATTERNS:
         matches = re.finditer(pattern, text, re.IGNORECASE)
         for match in matches:
-            exp_text = match.group().strip()
-            if exp_text:
+            raw_exp_text = match.group(0).strip()
+            if raw_exp_text in processed_texts:
+                continue
+            processed_texts.add(raw_exp_text)
+
+            normalized_name = normalize_experience_text(raw_exp_text)
+
+            if normalized_name:
                 experience_requirements.append({
-                    "name": exp_text,
+                    "name": normalized_name,
                     "source_job": f"{job_title} at {company}",
                     "company": company,
                     "job_url": job_url
                 })
-    
     return experience_requirements
 
 def aggregate_and_rank_with_sources(items: List[Dict], top_n: int = 10) -> List[Dict[str, Any]]:
@@ -495,18 +542,31 @@ def aggregate_and_rank_with_sources(items: List[Dict], top_n: int = 10) -> List[
         })
     
     # Sort by count and get top N
-    sorted_items = sorted(item_groups.values(), key=lambda x: x["count"], reverse=True)[:top_n]
+    # Ensure top_n is applied correctly
+    sorted_item_values = sorted(item_groups.values(), key=lambda x: x["count"], reverse=True)
     
+    # If top_n is provided and positive, slice the list. Otherwise, return all items.
+    if top_n and top_n > 0:
+         final_sorted_items = sorted_item_values[:top_n]
+    else:
+         final_sorted_items = sorted_item_values
+
     # Calculate percentages and format
-    total_items = len(items)
+    # total_items_for_percentage = sum(item['count'] for item in final_sorted_items) # Use sum of counts in top_n for percentage
+    # If we want percentage relative to all unique items found before top_n, then:
+    # total_items_for_percentage = sum(item['count'] for item in sorted_item_values)
+    # For now, let's use the count of all items passed into the function for consistency with other sections
+    total_items_count_in_all_jobs = sum(item['count'] for item in item_groups.values())
+
+
     ranked_items = []
     
-    for item in sorted_items:
+    for item in final_sorted_items: # Iterate over the potentially sliced list
         # Remove duplicate sources
         unique_sources = []
         seen_sources = set()
         for source in item["sources"]:
-            source_key = f"{source['job']}-{source['company']}"
+            source_key = f"{source['job']}-{source['company']}" # More robust key
             if source_key not in seen_sources:
                 unique_sources.append(source)
                 seen_sources.add(source_key)
@@ -514,7 +574,8 @@ def aggregate_and_rank_with_sources(items: List[Dict], top_n: int = 10) -> List[
         ranked_items.append({
             "name": item["name"],
             "count": item["count"],
-            "percentage": round((item["count"] / total_items) * 100, 1),
+            # Calculate percentage relative to the total count of all unique items found
+            "percentage": round((item["count"] / total_items_count_in_all_jobs) * 100, 1) if total_items_count_in_all_jobs > 0 else 0,
             "sources": unique_sources[:5]  # Limit to 5 sources for UI performance
         })
     
@@ -561,21 +622,24 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
         all_skills = []
         all_experience = []
         
+        jobs_with_descriptions_count = 0
         for job in jobs:
             description = job.get("job_description", "")
             if not description:
                 continue
+            jobs_with_descriptions_count +=1
                 
             cleaned_description = clean_job_description(description)
             
             # Get actual job details for source tracking
-            actual_job_title = job.get("job_title", "Job Posting")
-            company_name = job.get("company", job.get("employer_name", "Company"))
-            
+            actual_job_title = job.get("job_title", "Job Posting") # Fallback if job_title is missing
+            company_name = job.get("company_name", job.get("employer_name", "Unknown Company")) # Prefer company_name from JSearch
+            job_posting_url = job.get("job_apply_link", job.get("job_url")) # Prefer apply link
+
             # Extract certifications, skills, and experience
-            certifications = extract_certifications_with_sources(cleaned_description, actual_job_title, company_name, job.get("job_url"))
-            skills = extract_technical_skills_with_sources(cleaned_description, actual_job_title, company_name, job.get("job_url"))
-            experience = extract_experience_with_sources(cleaned_description, actual_job_title, company_name, job.get("job_url"))
+            certifications = extract_certifications_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url)
+            skills = extract_technical_skills_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url)
+            experience = extract_experience_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url)
             
             all_certifications.extend(certifications)
             all_skills.extend(skills)
@@ -584,14 +648,14 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
         # Aggregate and rank results
         top_certifications = aggregate_and_rank_with_sources(all_certifications, 10)
         top_skills = aggregate_and_rank_with_sources(all_skills, 15)
-        top_experience = aggregate_and_rank_with_sources(all_experience, 8)
+        top_experience = aggregate_and_rank_with_sources(all_experience, 8) # top_n for experience is 8
         
         analysis_data = {
-            "certifications": top_certifications,
-            "technical_skills": top_skills,
-            "experience_requirements": top_experience,
+            "certifications": { "title": "Valued Certifications", "items": top_certifications},
+            "skills": { "title": "Top Skills", "items": top_skills}, # Changed from technical_skills
+            "experience": { "title": "Experience Requirements", "items": top_experience}, # Changed from experience_requirements
             "total_jobs_found": len(jobs),
-            "jobs_with_descriptions": len([j for j in jobs if j.get("job_description")]),
+            "jobs_with_descriptions": jobs_with_descriptions_count, # Use the counter
             "search_criteria": {
                 "job_title": payload.job_title,
                 "location": payload.location,
@@ -606,10 +670,15 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
             jobs_analyzed=len(jobs)
         )
         
-    except HTTPException:
+    except HTTPException: # Re-raise HTTPException directly
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis error: {str(e)}")
+        # Log the exception for debugging
+        print(f"Unhandled error during analysis: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred during analysis. Please try again later.")
+
 
 @app.get("/health")
 @limiter.exempt

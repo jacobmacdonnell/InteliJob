@@ -22,10 +22,16 @@ export interface ReportSection {
   items: ExtractedItem[];
 }
 
+// This new type defines the structure for sections coming from the backend
+export interface BackendReportSection {
+  title: string;
+  items: ExtractedItem[];
+}
+
 export interface BackendReportData {
-  certifications: ExtractedItem[];
-  technical_skills: ExtractedItem[];
-  experience_requirements: ExtractedItem[];
+  certifications: BackendReportSection; // Changed
+  skills: BackendReportSection; // Changed from technical_skills
+  experience: BackendReportSection; // Changed from experience_requirements
   total_jobs_found: number;
   jobs_with_descriptions: number;
   search_criteria: {

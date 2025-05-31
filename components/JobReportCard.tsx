@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react'; // Added useState, useMemo
 import {
   Box,
   Heading,
@@ -9,15 +9,20 @@ import {
   Tag,
   Icon,
   useColorModeValue,
+  Button, // Added Button
+  Flex,   // Added Flex
 } from '@chakra-ui/react';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'; // Added Chevron icons
 import type { ReportData, ReportSection } from '../types';
 
-interface JobReportCardProps { // Renamed from SimpleReportDisplayProps
+interface JobReportCardProps {
   data: ReportData | null;
 }
 
-const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ section, title }) => {
+// Changed props: only 'section' is needed, 'title' is part of 'section'
+const SectionDisplay: React.FC<{ section: ReportSection }> = ({ section }) => {
+  const [showAll, setShowAll] = useState(false); // State for Show More/Less
+
   const cardBg = useColorModeValue('gray.50', 'gray.750');
   const itemBg = useColorModeValue('white', 'gray.700');
   const hoverBg = useColorModeValue('gray.100', 'gray.600');
@@ -26,30 +31,38 @@ const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ s
   const sectionTitleColor = useColorModeValue('teal.600', 'teal.300');
   const linkColor = useColorModeValue('blue.500', 'blue.300');
 
+  // Use section.title for the heading. Provide a fallback if title might be missing.
+  const currentTitle = section?.title || "Section";
+
+  // useMemo for sortedItems
+  const sortedItems = useMemo(() => {
+    if (!section?.items) return [];
+    return [...section.items].sort((a, b) => b.count - a.count);
+  }, [section?.items]);
+
+  const itemsToDisplay = showAll ? sortedItems : sortedItems.slice(0, 3);
+
   if (!section || !section.items || section.items.length === 0) {
     return (
-      <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md" mb={6}> {/* p changed from 5 to 4 */}
-        <Heading as="h3" size="sm" color={sectionTitleColor} mb={2} fontWeight="semibold"> {/* size sm, fontWeight semibold */}
-          {title}
+      <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md" mb={6}>
+        <Heading as="h3" size="sm" color={sectionTitleColor} mb={2} fontWeight="semibold">
+          {currentTitle}
         </Heading>
         <Text color={mutedColor}>No data available for this section.</Text>
       </Box>
     );
   }
 
-  const sortedItems = [...section.items].sort((a, b) => b.count - a.count);
-  const top3Items = sortedItems.slice(0, 3); // Get top 3 items
-
   return (
-    <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md" mb={6}> {/* p changed from 5 to 4 */}
-      <Heading as="h3" size="sm" color={sectionTitleColor} mb={3} fontWeight="semibold"> {/* size sm, mb 3, fontWeight semibold */}
-        {title}
+    <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md" mb={6}>
+      <Heading as="h3" size="sm" color={sectionTitleColor} mb={3} fontWeight="semibold">
+        {currentTitle}
       </Heading>
-      <VStack spacing={3} align="stretch"> {/* spacing changed from 4 to 3 */}
-        {top3Items.map((item, index) => ( // map over top3Items
+      <VStack spacing={2} align="stretch"> {/* spacing changed from 3 to 2 */}
+        {itemsToDisplay.map((item, index) => (
           <Box
-            key={`${title}-${index}-${item.name}`}
-            p={3} // p changed from 4 to 3
+            key={`${currentTitle}-${index}-${item.name}`}
+            p={3}
             bg={itemBg}
             borderRadius="md"
             boxShadow="sm"
@@ -57,7 +70,7 @@ const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ s
             transition="background-color 0.2s ease-in-out"
           >
             <HStack justify="space-between" align="flex-start">
-              <Text fontWeight="semibold" fontSize="md" color={textColor} flex={1} mb={1}> {/* fontWeight semibold, fontSize md */}
+              <Text fontWeight="semibold" fontSize="md" color={textColor} flex={1} mb={1}>
                 {item.name}
               </Text>
               <Tag colorScheme="teal" size="sm" variant="solid">
@@ -67,13 +80,13 @@ const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ s
 
             {item.sources && item.sources.length > 0 && (
               <Box mt={2} pl={1}>
-                <Text fontSize="xs" fontWeight="medium" color={mutedColor} mb={0.5}> {/* fontSize xs, fontWeight medium, mb 0.5 */}
+                <Text fontSize="xs" fontWeight="medium" color={mutedColor} mb={0.5}>
                   Mentioned in:
                 </Text>
                 <VStack spacing={1} align="stretch">
                   {item.sources.map((source, sourceIndex) => (
                     <HStack key={sourceIndex} spacing={2} fontSize="sm">
-                      <Icon as={ExternalLinkIcon} color={linkColor} w={3} h={3} flexShrink={0} /> {/* w,h changed to 3 */}
+                      <Icon as={ExternalLinkIcon} color={linkColor} w={3} h={3} flexShrink={0} />
                       {source.job_url ? (
                         <Link
                           href={source.job_url}
@@ -101,12 +114,25 @@ const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ s
             )}
           </Box>
         ))}
+        {sortedItems.length > 3 && (
+          <Flex justifyContent="center" mt={2}>
+            <Button
+              size="sm"
+              variant="outline"
+              colorScheme="teal"
+              onClick={() => setShowAll(!showAll)}
+              leftIcon={showAll ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            >
+              {showAll ? 'Show Less' : `Show All (${sortedItems.length} items)`}
+            </Button>
+          </Flex>
+        )}
       </VStack>
     </Box>
   );
 };
 
-export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => { // Renamed from SimpleReportDisplay
+export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => {
   const containerBg = useColorModeValue('gray.100', 'gray.800');
   const titleColor = useColorModeValue('gray.700', 'gray.200');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
@@ -119,20 +145,34 @@ export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => { // Re
     );
   }
 
-  const skillsSection = data.skills || { title: "Top Skills", items: [] };
-  const certificationsSection = data.certifications || { title: "Valued Certifications", items: [] };
-  const experienceSection = data.experience || { title: "Experience Requirements", items: [] };
+  // Directly use section objects from data, which include title and items
+  const skillsSection = data.skills;
+  const certificationsSection = data.certifications;
+  const experienceSection = data.experience;
 
   return (
     <Box bg={containerBg} p={{ base: 3, md: 6 }} borderRadius="lg" minHeight="100vh">
-      <Heading as="h2" size="md" textAlign="center" mb={5} color={titleColor}> {/* size md, mb 5 */}
+      <Heading as="h2" size="md" textAlign="center" mb={5} color={titleColor}>
         Job Requirements Overview
       </Heading>
 
-      <VStack spacing={5} align="stretch"> {/* spacing changed from 6 to 5 */}
-        <SectionDisplay section={skillsSection} title={skillsSection.title || "Top Skills"} />
-        <SectionDisplay section={certificationsSection} title={certificationsSection.title || "Valued Certifications"} />
-        <SectionDisplay section={experienceSection} title={experienceSection.title || "Experience Requirements"} />
+      <VStack spacing={4} align="stretch"> {/* spacing changed from 5 to 4 */}
+        {/* Pass the whole section object to SectionDisplay */}
+        {skillsSection && skillsSection.items.length > 0 && <SectionDisplay section={skillsSection} />}
+        {certificationsSection && certificationsSection.items.length > 0 && <SectionDisplay section={certificationsSection} />}
+        {experienceSection && experienceSection.items.length > 0 && <SectionDisplay section={experienceSection} />}
+
+        {/* Fallback for sections if they might be null/undefined or empty,
+            though backend now ensures they are objects with at least a title and items array.
+            The SectionDisplay itself handles empty items array.
+            Adding a check here to prevent rendering SectionDisplay if the whole section object is missing.
+        */}
+        {(!skillsSection || skillsSection.items.length === 0) &&
+         (!certificationsSection || certificationsSection.items.length === 0) &&
+         (!experienceSection || experienceSection.items.length === 0) &&
+         (!data.total_jobs_found || data.total_jobs_found === 0) && // Check if no jobs were found at all
+          <Text color={mutedColor} textAlign="center">No specific requirements data extracted from the analyzed jobs.</Text>
+        }
       </VStack>
     </Box>
   );
