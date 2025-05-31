@@ -11,7 +11,6 @@ import {
   HStack
 } from '@chakra-ui/react';
 import { JobInputForm } from './components/JobInputForm';
-// import { ReportDisplay } from './components/ReportDisplay'; // Comment out or remove
 import { SimpleReportDisplay } from './components/SimpleReportDisplay';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
