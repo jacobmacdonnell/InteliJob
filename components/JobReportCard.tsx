@@ -6,15 +6,14 @@ import {
   VStack,
   HStack,
   Link,
-  Divider,
   Tag,
   Icon,
   useColorModeValue,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
-import type { ReportData, ReportSection, ExtractedItem, JobSource } from '../types';
+import type { ReportData, ReportSection } from '../types';
 
-interface SimpleReportDisplayProps {
+interface JobReportCardProps { // Renamed from SimpleReportDisplayProps
   data: ReportData | null;
 }
 
@@ -29,8 +28,8 @@ const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ s
 
   if (!section || !section.items || section.items.length === 0) {
     return (
-      <Box bg={cardBg} p={5} borderRadius="lg" boxShadow="md" mb={6}>
-        <Heading as="h3" size="md" color={sectionTitleColor} mb={2}>
+      <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md" mb={6}> {/* p changed from 5 to 4 */}
+        <Heading as="h3" size="sm" color={sectionTitleColor} mb={2} fontWeight="semibold"> {/* size sm, fontWeight semibold */}
           {title}
         </Heading>
         <Text color={mutedColor}>No data available for this section.</Text>
@@ -38,19 +37,19 @@ const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ s
     );
   }
 
-  // Sort items by count in descending order
   const sortedItems = [...section.items].sort((a, b) => b.count - a.count);
+  const top3Items = sortedItems.slice(0, 3); // Get top 3 items
 
   return (
-    <Box bg={cardBg} p={5} borderRadius="lg" boxShadow="md" mb={6}>
-      <Heading as="h3" size="md" color={sectionTitleColor} mb={4}>
+    <Box bg={cardBg} p={4} borderRadius="lg" boxShadow="md" mb={6}> {/* p changed from 5 to 4 */}
+      <Heading as="h3" size="sm" color={sectionTitleColor} mb={3} fontWeight="semibold"> {/* size sm, mb 3, fontWeight semibold */}
         {title}
       </Heading>
-      <VStack spacing={4} align="stretch">
-        {sortedItems.map((item, index) => (
+      <VStack spacing={3} align="stretch"> {/* spacing changed from 4 to 3 */}
+        {top3Items.map((item, index) => ( // map over top3Items
           <Box
             key={`${title}-${index}-${item.name}`}
-            p={4}
+            p={3} // p changed from 4 to 3
             bg={itemBg}
             borderRadius="md"
             boxShadow="sm"
@@ -58,37 +57,37 @@ const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ s
             transition="background-color 0.2s ease-in-out"
           >
             <HStack justify="space-between" align="flex-start">
-              <Text fontWeight="medium" fontSize="md" color={textColor} flex={1} mb={1}> {/* Changed fontSize to md, added mb={1} */}
+              <Text fontWeight="semibold" fontSize="md" color={textColor} flex={1} mb={1}> {/* fontWeight semibold, fontSize md */}
                 {item.name}
               </Text>
-              <Tag colorScheme="teal" size="sm" variant="solid"> {/* Changed size to sm */}
+              <Tag colorScheme="teal" size="sm" variant="solid">
                 Found in: {item.count} job(s)
               </Tag>
             </HStack>
 
             {item.sources && item.sources.length > 0 && (
-              <Box mt={2} pl={1}> {/* Adjusted mt and pl slightly */}
-                <Text fontSize="sm" fontWeight="semibold" color={mutedColor} mb={1}> {/* Adjusted mb */}
+              <Box mt={2} pl={1}>
+                <Text fontSize="xs" fontWeight="medium" color={mutedColor} mb={0.5}> {/* fontSize xs, fontWeight medium, mb 0.5 */}
                   Mentioned in:
                 </Text>
-                <VStack spacing={1} align="stretch"> {/* Changed spacing to 1 */}
+                <VStack spacing={1} align="stretch">
                   {item.sources.map((source, sourceIndex) => (
-                    <HStack key={sourceIndex} spacing={2} fontSize="sm"> {/* Ensured base fontSize for HStack is sm for consistency */}
-                      <Icon as={ExternalLinkIcon} color={linkColor} w={3.5} h={3.5} flexShrink={0} />
+                    <HStack key={sourceIndex} spacing={2} fontSize="sm">
+                      <Icon as={ExternalLinkIcon} color={linkColor} w={3} h={3} flexShrink={0} /> {/* w,h changed to 3 */}
                       {source.job_url ? (
                         <Link
                           href={source.job_url}
                           isExternal
                           color={linkColor}
-                          fontWeight="normal" /* Changed fontWeight to normal */
+                          fontWeight="normal"
                           _hover={{ textDecoration: 'underline' }}
-                          fontSize="sm" /* Changed fontSize to sm */
-                          lineHeight="short" // Added for better text flow with icon
+                          fontSize="sm"
+                          lineHeight="short"
                         >
                           {source.job || 'View Job Post'} (Company: {source.company || 'N/A'})
                         </Link>
                       ) : (
-                        <Text color={mutedColor} fontSize="sm" lineHeight="short"> {/* Changed fontSize to sm, added lineHeight */}
+                        <Text color={mutedColor} fontSize="sm" lineHeight="short">
                           {source.job || 'Job Post'} (Company: {source.company || 'N/A'}) - No direct link
                         </Text>
                       )}
@@ -107,14 +106,14 @@ const SectionDisplay: React.FC<{ section: ReportSection; title: string }> = ({ s
   );
 };
 
-export const SimpleReportDisplay: React.FC<SimpleReportDisplayProps> = ({ data }) => {
+export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => { // Renamed from SimpleReportDisplay
   const containerBg = useColorModeValue('gray.100', 'gray.800');
   const titleColor = useColorModeValue('gray.700', 'gray.200');
-  const mutedColor = useColorModeValue('gray.600', 'gray.400'); // Added for consistency
+  const mutedColor = useColorModeValue('gray.600', 'gray.400');
 
   if (!data) {
     return (
-      <Box textAlign="center" p={10} bg={containerBg}> {/* Added bg for consistency */}
+      <Box textAlign="center" p={10} bg={containerBg}>
         <Text fontSize="lg" color={mutedColor}>No report data to display.</Text>
       </Box>
     );
@@ -124,14 +123,13 @@ export const SimpleReportDisplay: React.FC<SimpleReportDisplayProps> = ({ data }
   const certificationsSection = data.certifications || { title: "Valued Certifications", items: [] };
   const experienceSection = data.experience || { title: "Experience Requirements", items: [] };
 
-
   return (
-    <Box bg={containerBg} p={{ base: 3, md: 6 }} borderRadius="lg" minHeight="100vh"> {/* Added minHeight */}
-      <Heading as="h2" size="lg" textAlign="center" mb={8} color={titleColor}> {/* Increased mb */}
+    <Box bg={containerBg} p={{ base: 3, md: 6 }} borderRadius="lg" minHeight="100vh">
+      <Heading as="h2" size="md" textAlign="center" mb={5} color={titleColor}> {/* size md, mb 5 */}
         Job Requirements Overview
       </Heading>
 
-      <VStack spacing={6} align="stretch"> {/* Adjusted spacing */}
+      <VStack spacing={5} align="stretch"> {/* spacing changed from 6 to 5 */}
         <SectionDisplay section={skillsSection} title={skillsSection.title || "Top Skills"} />
         <SectionDisplay section={certificationsSection} title={certificationsSection.title || "Valued Certifications"} />
         <SectionDisplay section={experienceSection} title={experienceSection.title || "Experience Requirements"} />

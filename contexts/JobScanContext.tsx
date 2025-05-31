@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useCallback, useContext, ReactNode } from 'react';
-import { fetchReport } from '../services/jobScanService';
+import { fetchReport } from '../services/JobScanService';
 import type { JobCriteria, ReportData } from '../types';
 
 interface JobScanContextType {

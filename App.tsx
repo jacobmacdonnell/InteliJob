@@ -11,7 +11,7 @@ import {
   HStack
 } from '@chakra-ui/react';
 import { JobInputForm } from './components/JobInputForm';
-import { SimpleReportDisplay } from './components/SimpleReportDisplay';
+import { JobReportCard } from './components/JobReportCard';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
 import { JobScanProvider, useJobScan } from './contexts/JobScanContext';
@@ -152,7 +152,7 @@ const AppContent: React.FC = () => {
           {/* Results Display */}
           {reportData && !isLoading && (
             <Box>
-              <SimpleReportDisplay data={reportData} />
+              <JobReportCard data={reportData} />
             </Box>
           )}
         </VStack>
