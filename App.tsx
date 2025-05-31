@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react'; // Import useState
 import {
   Box,
   Heading,
@@ -16,6 +16,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
 import { RateLimitNotification } from './components/RateLimitNotification';
 import { JobScanProvider, useJobScan } from './contexts/JobScanContext';
+import { LandingPage } from './components/LandingPage'; // Import LandingPage
 
 // Enhanced Search Icon with better visual appeal
 const SearchDocIcon = (props: any) => (
@@ -33,6 +34,7 @@ const SearchDocIcon = (props: any) => (
 
 const AppContent: React.FC = () => {
   const { reportData, isLoading, error, handleScan } = useJobScan();
+  const [showLandingPage, setShowLandingPage] = useState(true); // State for landing page visibility
   
   const bgGradient = useColorModeValue(
     'linear(to-br, gray.50, blue.50)',
@@ -40,6 +42,10 @@ const AppContent: React.FC = () => {
   );
   const headerBg = useColorModeValue('white', 'gray.800');
   const shadowColor = useColorModeValue('xl', '2xl');
+
+  if (showLandingPage) {
+    return <LandingPage onNavigateToApp={() => setShowLandingPage(false)} />;
+  }
 
   return (
     <Box 
@@ -121,15 +127,15 @@ const AppContent: React.FC = () => {
           {/* Input Form Card */}
           <Box 
             bg={useColorModeValue('white', 'gray.800')}
-            p={{ base: 3, sm: 4 }} 
-            borderRadius="lg" 
+            p={{ base: 3, sm: 4 }}
+            borderRadius="lg"
             boxShadow={shadowColor}
             borderWidth="1px"
             borderColor={useColorModeValue('gray.200', 'gray.700')}
             position="relative"
             overflow="hidden"
             _before={{
-              content: '""',
+              content: '""', // eslint-disable-line quotes
               position: 'absolute',
               top: 0,
               left: 0,
@@ -145,7 +151,7 @@ const AppContent: React.FC = () => {
           {error && (
             <ErrorMessage message={error} />
           )}
-          
+
           {/* Loading State */}
           {isLoading && (
             <Flex justify="center" py={3}>
