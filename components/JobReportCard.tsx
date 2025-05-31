@@ -11,6 +11,10 @@ import {
   useColorModeValue,
   Button, // Added Button
   Flex,   // Added Flex
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'; // Added Chevron icons
 import type { ReportData, ReportSection } from '../types';
@@ -18,6 +22,7 @@ import { KeyRequirementsSnapshot } from './KeyRequirementsSnapshot'; // Import K
 
 interface JobReportCardProps {
   data: ReportData | null;
+  error?: string | null;
 }
 
 // Changed props: only 'section' is needed, 'title' is part of 'section'
@@ -38,8 +43,42 @@ const SectionDisplay: React.FC<{ section: ReportSection }> = ({ section }) => {
   // useMemo for sortedItems
   const sortedItems = useMemo(() => {
     if (!section?.items) return [];
+    
+    // Special sorting for education section
+    if (section.title.toLowerCase().includes('education')) {
+      const educationLevels = {
+        'phd': 4,
+        'doctorate': 4,
+        'doctoral': 4,
+        'master': 3,
+        'm.s.': 3,
+        'm.a.': 3,
+        'bachelor': 2,
+        'b.s.': 2,
+        'b.a.': 2,
+        'associate': 1,
+        'a.s.': 1,
+        'a.a.': 1
+      };
+
+      return [...section.items].sort((a, b) => {
+        const aLevel = Object.entries(educationLevels).find(([key]) => 
+          a.name.toLowerCase().includes(key))?.[1] || 0;
+        const bLevel = Object.entries(educationLevels).find(([key]) => 
+          b.name.toLowerCase().includes(key))?.[1] || 0;
+        
+        // First sort by education level
+        if (aLevel !== bLevel) {
+          return bLevel - aLevel;
+        }
+        // Then by count
+        return b.count - a.count;
+      });
+    }
+    
+    // Default sorting by count for other sections
     return [...section.items].sort((a, b) => b.count - a.count);
-  }, [section?.items]);
+  }, [section?.items, section?.title]);
 
   const itemsToDisplay = showAll ? sortedItems : sortedItems.slice(0, 3);
 
@@ -140,10 +179,22 @@ const SectionDisplay: React.FC<{ section: ReportSection }> = ({ section }) => {
   );
 };
 
-export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => {
+export const JobReportCard: React.FC<JobReportCardProps> = ({ data, error }) => {
   const containerBg = useColorModeValue('gray.100', 'gray.800');
   const titleColor = useColorModeValue('gray.700', 'gray.200');
   const mutedColor = useColorModeValue('gray.600', 'gray.400');
+
+  if (error) {
+    return (
+      <Box textAlign="center" p={10} bg={containerBg}>
+        <Alert status="error" borderRadius="lg">
+          <AlertIcon />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </Box>
+    );
+  }
 
   if (!data) {
     return (
@@ -157,6 +208,7 @@ export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => {
   const skillsSection = data.skills;
   const certificationsSection = data.certifications;
   const experienceSection = data.experience;
+  const educationSection = data.education;
 
   return (
     <Box bg={containerBg} p={{ base: 3, md: 6 }} borderRadius="lg" minHeight="100vh">
@@ -166,21 +218,17 @@ export const JobReportCard: React.FC<JobReportCardProps> = ({ data }) => {
 
       <KeyRequirementsSnapshot reportData={data} /> {/* Integrated here */}
 
-      <VStack spacing={4} align="stretch"> {/* Current spacing is 4, this is for sections */}
-        {/* Pass the whole section object to SectionDisplay */}
-        {skillsSection && skillsSection.items.length > 0 && <SectionDisplay section={skillsSection} />}
+      <VStack spacing={4} align="stretch">
+        {educationSection && educationSection.items.length > 0 && <SectionDisplay section={educationSection} />}
         {certificationsSection && certificationsSection.items.length > 0 && <SectionDisplay section={certificationsSection} />}
+        {skillsSection && skillsSection.items.length > 0 && <SectionDisplay section={skillsSection} />}
         {experienceSection && experienceSection.items.length > 0 && <SectionDisplay section={experienceSection} />}
 
-        {/* Fallback for sections if they might be null/undefined or empty,
-            though backend now ensures they are objects with at least a title and items array.
-            The SectionDisplay itself handles empty items array.
-            Adding a check here to prevent rendering SectionDisplay if the whole section object is missing.
-        */}
-        {(!skillsSection || skillsSection.items.length === 0) &&
+        {(!educationSection || educationSection.items.length === 0) &&
          (!certificationsSection || certificationsSection.items.length === 0) &&
+         (!skillsSection || skillsSection.items.length === 0) &&
          (!experienceSection || experienceSection.items.length === 0) &&
-         (data.metadata && (!data.metadata.total_jobs_found || data.metadata.total_jobs_found === 0)) && // Check metadata
+         (data.metadata && (!data.metadata.total_jobs_found || data.metadata.total_jobs_found === 0)) &&
           <Text color={mutedColor} textAlign="center">No specific requirements data extracted from the analyzed jobs.</Text>
         }
       </VStack>

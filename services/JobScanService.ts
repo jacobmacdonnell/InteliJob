@@ -117,16 +117,20 @@ const filterExperience = (items: ExtractedItem[]): ExtractedItem[] => {
 const transformBackendData = (backendData: BackendReportData): ReportData => {
   return {
     skills: {
-      title: backendData.skills?.title || "Top Technical Skills", // Use backend title, with fallback
+      title: backendData.skills?.title || "Top Technical Skills",
       items: filterSkills(backendData.skills?.items || []),
     },
     certifications: {
-      title: backendData.certifications?.title || "Most Valued Certifications", // Use backend title, with fallback
+      title: backendData.certifications?.title || "Top Certifications",
       items: filterCertifications(backendData.certifications?.items || []),
     },
     experience: {
-      title: backendData.experience?.title || "Experience Requirements", // Use backend title, with fallback
+      title: backendData.experience?.title || "Experience Requirements",
       items: filterExperience(backendData.experience?.items || []),
+    },
+    education: {
+      title: backendData.education?.title || "Education Requirements",
+      items: filterQualityData(backendData.education?.items || []),
     },
     metadata: {
       total_jobs_found: backendData.total_jobs_found,
@@ -146,6 +150,19 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
       time_range: criteria.time_range || '1d',
     });
 
+    // Check rate limit headers
+    const remaining = response.headers['x-ratelimit-remaining'];
+    if (remaining !== undefined) {
+      const remainingCount = parseInt(remaining);
+      if (remainingCount <= 5) {
+        // Dispatch a custom event for rate limit notification
+        const event = new CustomEvent('rateLimitWarning', {
+          detail: { remaining: remainingCount }
+        });
+        window.dispatchEvent(event);
+      }
+    }
+
     if (!response.data.success) {
       throw new Error(response.data.message || 'Job analysis failed');
     }
@@ -154,7 +171,13 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
       throw new Error('No data received from the analysis');
     }
 
-    return transformBackendData(response.data.data);
+    // Validate the response data structure
+    const data = response.data.data;
+    if (!data.skills || !data.certifications || !data.experience || !data.education) {
+      throw new Error('Invalid data structure received from the analysis');
+    }
+
+    return transformBackendData(data);
 
   } catch (error: any) {
     console.error("Job analysis failed:", error);
@@ -172,6 +195,10 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
           throw new Error("Server error occurred during analysis. Please try again later.");
         } else if (status === 400) {
           throw new Error(`Invalid request: ${errorMessage}`);
+        } else if (status === 429) {
+          throw new Error("Rate limit exceeded. Please wait a moment before trying again.");
+        } else if (status === 401 || status === 403) {
+          throw new Error("Authentication error. Please check your API configuration.");
         } else {
           throw new Error(`Analysis failed (${status}): ${errorMessage}`);
         }

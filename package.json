@@ -10,7 +10,13 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
   },
-  "keywords": ["job-analysis", "career-insights", "AI", "job-market", "NLP"],
+  "keywords": [
+    "job-analysis",
+    "career-insights",
+    "AI",
+    "job-market",
+    "NLP"
+  ],
   "author": "InteliJob Team",
   "license": "MIT",
   "dependencies": {
@@ -21,7 +27,8 @@
     "axios": "^1.9.0",
     "framer-motion": "10.18.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

@@ -14,6 +14,7 @@ import { JobInputForm } from './components/JobInputForm';
 import { JobReportCard } from './components/JobReportCard';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
+import { RateLimitNotification } from './components/RateLimitNotification';
 import { JobScanProvider, useJobScan } from './contexts/JobScanContext';
 
 // Enhanced Search Icon with better visual appeal
@@ -47,6 +48,9 @@ const AppContent: React.FC = () => {
       display="flex" 
       flexDirection="column"
     >
+      {/* Rate Limit Notification */}
+      <RateLimitNotification />
+
       {/* Header Section */}
       <Box
         w="full"

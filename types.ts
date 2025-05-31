@@ -29,9 +29,10 @@ export interface BackendReportSection {
 }
 
 export interface BackendReportData {
-  certifications: BackendReportSection; // Changed
-  skills: BackendReportSection; // Changed from technical_skills
-  experience: BackendReportSection; // Changed from experience_requirements
+  certifications: BackendReportSection;
+  skills: BackendReportSection;
+  experience: BackendReportSection;
+  education: BackendReportSection;
   total_jobs_found: number;
   jobs_with_descriptions: number;
   search_criteria: {
@@ -45,6 +46,7 @@ export interface ReportData {
   certifications: ReportSection;
   skills: ReportSection;
   experience: ReportSection;
+  education: ReportSection;
   metadata: {
     total_jobs_found: number;
     jobs_with_descriptions: number;
