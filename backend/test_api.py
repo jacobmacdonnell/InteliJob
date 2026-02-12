@@ -41,7 +41,7 @@ def test_analyze_jobs_endpoint():
     test_payload = {
         "job_title": "Software Engineer",
         "location": "San Francisco, CA",
-        "time_range": "1w"
+        "time_range": "7d"
     }
     
     response = client.post("/analyze-jobs", json=test_payload)
@@ -50,12 +50,23 @@ def test_analyze_jobs_endpoint():
     print(f"Response: {response.json()}")
     
     if response.status_code == 500:
-        # Expected if RapidAPI key is not configured
+        # Expected if RapidAPI key is not configured and mock data is disabled
         data = response.json()
         if "RAPIDAPI_KEY not configured" in str(data.get("detail", "")):
             print("✅ Endpoint correctly reports missing RapidAPI key")
             return True
     elif response.status_code == 200:
+        data = response.json()
+        if data.get('success') and data.get('data'):
+            report = data['data']
+            # Validate new structured response format
+            for section_key in ['skills', 'certifications', 'experience', 'education']:
+                if section_key in report:
+                    assert 'title' in report[section_key], f"Missing 'title' in {section_key}"
+                    assert 'items' in report[section_key], f"Missing 'items' in {section_key}"
+                    print(f"   - {section_key}: {len(report[section_key]['items'])} items")
+            print("✅ Endpoint working with correct response structure")
+            return True
         print("✅ Endpoint working with live data")
         return True
     

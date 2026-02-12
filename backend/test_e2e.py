@@ -107,8 +107,9 @@ def test_api_endpoints():
             if data.get('success'):
                 print_status("Job analysis endpoint working with live data", "success")
                 print(f"   - Jobs analyzed: {data.get('jobs_analyzed', 0)}")
-                print(f"   - Skills found: {len(data.get('data', {}).get('technical_skills', []))}")
-                print(f"   - Certifications found: {len(data.get('data', {}).get('certifications', []))}")
+                print(f"   - Skills found: {len(data.get('data', {}).get('skills', {}).get('items', []))}")
+                print(f"   - Certifications found: {len(data.get('data', {}).get('certifications', {}).get('items', []))}")
+                print(f"   - Education found: {len(data.get('data', {}).get('education', {}).get('items', []))}")
                 return True
             else:
                 print_status("Job analysis endpoint returned error", "error")
