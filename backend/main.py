@@ -3,7 +3,7 @@ import re
 import json
 import sqlite3
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Optional, Any
 from pathlib import Path
 from collections import Counter
@@ -116,6 +116,76 @@ def get_search_queries(job_title: str) -> List[str]:
             return queries
     # Unknown title: just search as-is
     return [job_title]
+
+
+TIME_RANGE_TO_DAYS: Dict[str, int] = {
+    "1d": 1,
+    "3d": 3,
+    "7d": 7,
+    "14d": 14,
+    "30d": 30,
+}
+
+
+def _parse_posted_datetime(job: Dict[str, Any]) -> Optional[datetime]:
+    """Parse a best-effort UTC datetime from job payload fields."""
+    ts_value = job.get("job_posted_at_timestamp")
+    if ts_value is not None:
+        try:
+            timestamp = float(ts_value)
+            # Some providers return milliseconds; normalize to seconds.
+            if abs(timestamp) > 1e11:
+                timestamp = timestamp / 1000.0
+            return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+        except (TypeError, ValueError, OSError):
+            pass
+
+    for key in ("job_posted_at_datetime_utc", "job_posted_at_datetime"):
+        raw = job.get(key)
+        if not raw:
+            continue
+        try:
+            iso = str(raw).replace("Z", "+00:00")
+            parsed = datetime.fromisoformat(iso)
+            return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+
+    return None
+
+
+
+
+def _dedup_job_key(job: Dict[str, Any]) -> str:
+    """Build a stable dedup key without collapsing distinct postings."""
+    job_id = job.get("job_id")
+    if job_id:
+        return str(job_id)
+
+    url = job.get("job_apply_link") or job.get("job_url")
+    if url:
+        return f"url:{url}"
+
+    employer = job.get("employer_name") or job.get("company_name") or ""
+    title = job.get("job_title") or ""
+    city = job.get("job_city") or ""
+    state = job.get("job_state") or ""
+    posted = job.get("job_posted_at_datetime_utc") or job.get("job_posted_at_datetime") or job.get("job_posted_at_timestamp") or ""
+    return f"meta:{employer}|{title}|{city}|{state}|{posted}"
+
+def filter_jobs_by_time_range(jobs: List[Dict], time_range: Optional[str]) -> List[Dict]:
+    """Apply exact local time-range filtering for ranges not natively supported by JSearch."""
+    if time_range not in TIME_RANGE_TO_DAYS:
+        return jobs
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=TIME_RANGE_TO_DAYS[time_range])
+    filtered = []
+    for job in jobs:
+        posted_at = _parse_posted_datetime(job)
+        # Keep unknown timestamps rather than incorrectly dropping potentially valid jobs.
+        if posted_at is None or posted_at >= cutoff:
+            filtered.append(job)
+    return filtered
 
 
 # ── Cert Dictionary ──────────────────────────────────────────────────────────
@@ -241,17 +311,14 @@ async def fetch_jobs_expanded(job_title: str, location: str = None, date_posted:
             tasks = [fetch_jobs_single(client, q, location, date_posted) for q in queries]
             results = await asyncio.gather(*tasks)
 
-        # Merge and deduplicate by job_id or (employer + title) combo
+        # Merge and deduplicate by stable identity while preserving distinct postings.
         seen_ids = set()
         all_jobs = []
         for batch in results:
             for job in batch:
-                job_id = job.get("job_id", "")
-                if not job_id:
-                    # Fallback dedup key
-                    job_id = f"{job.get('employer_name', '')}-{job.get('job_title', '')}"
-                if job_id not in seen_ids:
-                    seen_ids.add(job_id)
+                key = _dedup_job_key(job)
+                if key not in seen_ids:
+                    seen_ids.add(key)
                     all_jobs.append(job)
 
         return all_jobs, queries
@@ -272,7 +339,7 @@ def clean_text(text: str) -> str:
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
-def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
+def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: str = None, job_key: Optional[str] = None) -> List[Dict]:
     """Extract certifications using dictionary lookup."""
     certs = []
     text_lower = text.lower()
@@ -292,6 +359,7 @@ def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: 
                     "source_job": f"{job_title} at {company}",
                     "company": company,
                     "job_url": job_url,
+                    "job_key": job_key or job_url or f"{job_title} at {company}",
                 })
         else:
             if search_term in text_lower:
@@ -303,6 +371,7 @@ def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: 
                     "source_job": f"{job_title} at {company}",
                     "company": company,
                     "job_url": job_url,
+                    "job_key": job_key or job_url or f"{job_title} at {company}",
                 })
 
     return certs
@@ -326,7 +395,7 @@ def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict
                 "jobs": set(),
                 "sources": [],
             }
-        groups[name]["jobs"].add(item["source_job"])
+        groups[name]["jobs"].add(item.get("job_key", item["source_job"]))
         groups[name]["sources"].append({
             "job": item["source_job"],
             "company": item["company"],
@@ -342,7 +411,7 @@ def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict
         seen = set()
         unique_sources = []
         for s in g["sources"]:
-            key = f"{s['job']}-{s['company']}"
+            key = s.get("job_url") or f"{s['job']}-{s['company']}"
             if key not in seen:
                 unique_sources.append(s)
                 seen.add(key)
@@ -363,17 +432,24 @@ def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict
 # ── Insights ─────────────────────────────────────────────────────────────────
 
 def compute_title_distribution(jobs: List[Dict]) -> List[Dict]:
-    """Count actual job title variations in results."""
+    """Count job title variations in results (case/spacing normalized)."""
     titles = Counter()
+    canonical_display: Dict[str, str] = {}
+
     for job in jobs:
-        raw = job.get("job_title", "Unknown")
-        titles[raw] += 1
+        raw = str(job.get("job_title") or "Unknown")
+        cleaned = raw.strip() or "Unknown"
+        norm = re.sub(r"\s+", " ", cleaned).lower()
+
+        if norm not in canonical_display:
+            canonical_display[norm] = re.sub(r"\s+", " ", cleaned)
+        titles[norm] += 1
 
     total = sum(titles.values())
     dist = []
-    for title, count in titles.most_common(8):
+    for norm, count in titles.most_common(8):
         dist.append({
-            "title": title,
+            "title": canonical_display.get(norm, norm),
             "count": count,
             "percentage": round((count / total) * 100, 1) if total > 0 else 0,
         })
@@ -413,11 +489,12 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
     """Analyze job postings for certification demand."""
     try:
         # JSearch supports: today, 3days, week, month, all
-        date_map = {"1d": "today", "3d": "3days", "7d": "week", "14d": "month", "30d": "all"}
+        date_map = {"1d": "today", "3d": "3days", "7d": "week", "14d": "month", "30d": "month"}
         date_posted = date_map.get(payload.time_range, "today")
 
         # Multi-query expansion
         jobs, queries_used = await fetch_jobs_expanded(payload.job_title, payload.location, date_posted)
+        jobs = filter_jobs_by_time_range(jobs, payload.time_range)
 
         if not jobs:
             return JobAnalysisResponse(success=False, message="No jobs found", jobs_analyzed=0)
@@ -437,8 +514,9 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
             title = job.get("job_title", "Job Posting")
             company = job.get("company_name", job.get("employer_name", "Unknown"))
             url = job.get("job_apply_link", job.get("job_url"))
+            job_key = str(job.get("job_id") or url or f"{title}-{company}")
 
-            job_certs = extract_certs(cleaned, title, company, url)
+            job_certs = extract_certs(cleaned, title, company, url, job_key=job_key)
             all_certs.extend(job_certs)
             certs_per_job.append([c["name"] for c in job_certs])
 
@@ -592,4 +670,3 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
