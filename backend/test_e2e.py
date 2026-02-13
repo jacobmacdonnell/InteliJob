@@ -1,14 +1,30 @@
 #!/usr/bin/env python3
 """Backend API smoke tests using an in-process test client."""
 
+from __future__ import annotations
+
+from collections.abc import Generator
+from pathlib import Path
+import sys
+
+import pytest
 from fastapi.testclient import TestClient
-import main
+
+BACKEND_DIR = Path(__file__).resolve().parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+import main  # noqa: E402
 
 
-client = TestClient(main.app)
+@pytest.fixture()
+def client() -> Generator[TestClient, None, None]:
+    """Create an isolated API test client."""
+    with TestClient(main.app) as api_client:
+        yield api_client
 
 
-def test_health() -> None:
+def test_health(client: TestClient) -> None:
     """Health endpoint should respond with service metadata."""
     response = client.get('/health')
     response.raise_for_status()
@@ -18,10 +34,14 @@ def test_health() -> None:
     assert 'version' in data
 
 
-def test_analyze() -> None:
+def test_analyze(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Analyze endpoint should return parsed certification data."""
 
-    async def fake_fetch_jobs_expanded(job_title: str, location: str = None, date_posted: str = 'today'):
+    async def fake_fetch_jobs_expanded(
+        job_title: str,
+        location: str | None = None,
+        date_posted: str = 'today',
+    ):
         return ([{
             'job_title': 'Cybersecurity Analyst',
             'company_name': 'Acme Corp',
@@ -29,15 +49,12 @@ def test_analyze() -> None:
             'job_url': 'https://example.com/job/1',
         }], [job_title])
 
-    original = main.fetch_jobs_expanded
-    main.fetch_jobs_expanded = fake_fetch_jobs_expanded
-    try:
-        response = client.post('/analyze-jobs', json={
-            'job_title': 'Cybersecurity Analyst',
-            'time_range': '1d',
-        })
-    finally:
-        main.fetch_jobs_expanded = original
+    monkeypatch.setattr(main, 'fetch_jobs_expanded', fake_fetch_jobs_expanded)
+
+    response = client.post('/analyze-jobs', json={
+        'job_title': 'Cybersecurity Analyst',
+        'time_range': '1d',
+    })
 
     response.raise_for_status()
     data = response.json()
