@@ -22,4 +22,7 @@ class Settings:
             "your_rapidapi_key_here", "your_actual_rapidapi_key_here"
         ))
 
+    def is_production(self) -> bool:
+        return self.environment.lower() == "production"
+
 settings = Settings()
