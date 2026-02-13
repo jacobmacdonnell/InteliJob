@@ -1,7 +1,7 @@
 {
   "name": "intelijob",
-  "version": "1.0.0",
-  "description": "Professional job market intelligence platform with AI-powered insights",
+  "version": "2.0.0",
+  "description": "Personal cert research tool — analyzes job postings to rank cybersecurity certifications by employer demand",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,14 +10,7 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
   },
-  "keywords": [
-    "job-analysis",
-    "career-insights",
-    "AI",
-    "job-market",
-    "NLP"
-  ],
-  "author": "InteliJob Team",
+  "author": "Jacob Macdonnell",
   "license": "MIT",
   "dependencies": {
     "@chakra-ui/icons": "2.1.1",
@@ -28,8 +21,7 @@
     "framer-motion": "10.18.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^5.5.0",
-    "react-router-dom": "^6.30.1"
+    "react-icons": "^5.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

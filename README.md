@@ -1,99 +1,66 @@
-# InteliJob 🚀
+# InteliJob 🔍
 
-**Transform job postings into actionable career insights**
+**Find out which certifications employers actually want.**
 
-A professional job market intelligence platform that analyzes job postings to extract skills, certifications, and experience requirements with AI-powered insights.
-
----
-
-## ✨ **Key Features**
-
-🔍 **Smart Job Analysis**
-- Intelligent text extraction using spaCy NLP
-- Advanced data filtering to remove nonsensical results
-- Real-time market analytics and insights
-
-📊 **Interactive Analytics Dashboard**
-- Skills, certifications, and experience analysis
-- Market competition analysis with AI recommendations
-- CSV export and advanced filtering capabilities
-
-🎯 **Professional UX**
-- Modern responsive interface with dark theme
-- Real-time search suggestions and saved search history
-- Enhanced form validation and quality scoring
+A personal job market research tool that scans live job postings and ranks certifications, skills, and requirements by how often they appear — so you know exactly what to pursue for your career.
 
 ---
 
-## 🚀 **Quick Start**
+## ✨ What It Does
 
-### **Live Demo**
-- **Frontend**: [intelijob.netlify.app](https://intelijob.netlify.app/)
-- **Backend API**: [intelijob-backend.onrender.com](https://intelijob-backend.onrender.com/)
+1. **Search** — Enter a job title (e.g., "Cybersecurity Analyst") and optional location
+2. **Analyze** — Scans ~100 live job postings via the JSearch API
+3. **Rank** — Extracts and ranks certifications, skills, and education by demand, with links back to source job posts
 
-### **Local Development**
+---
+
+## 🚀 Quick Start
+
+### Local Development
 
 **Prerequisites:**
 - Node.js 16+ and npm
-- Python 3.9+ 
+- Python 3.9+
 
-**Frontend Setup:**
+**Frontend:**
 ```bash
 npm install
 npm run dev
-# Visit http://localhost:5174
+# Visit http://localhost:5173
 ```
 
-**Backend Setup:**
+**Backend:**
 ```bash
 cd backend
 pip install -r requirements.txt
-python main.py
-# API available at http://localhost:8000
+python start.py
+# API at http://localhost:8000
 ```
 
----
-
-## 📊 **How It Works**
-
-1. **Input**: Enter job title and location
-2. **Analysis**: AI extracts skills, certifications, and requirements
-3. **Insights**: Get market intelligence and career recommendations
-4. **Export**: Download results as CSV for further analysis
+**Environment Variables:**
+- `RAPIDAPI_KEY` — Required for live job data (get one at [RapidAPI JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch))
+- `VITE_API_BASE_URL` — Frontend API endpoint (default: `http://localhost:8000`)
 
 ---
 
-## 🛠️ **Tech Stack**
+## 🛠️ Tech Stack
 
-- **Frontend**: React 18 + TypeScript + Chakra UI
-- **Backend**: FastAPI + spaCy + JSearch API
-- **Deployment**: Netlify + Render
-- **Data**: Advanced NLP processing with smart filtering
-
----
-
-## 📚 **Documentation**
-
-- [Complete Setup Guide](docs/SETUP_COMPLETE.md)
-- [Backend Configuration](docs/BACKEND_GUIDE.md)
-- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
-- [Project Vision & Roadmap](docs/PROJECT_VISION.md)
+- **Frontend:** React 18 + TypeScript + Chakra UI + Vite
+- **Backend:** FastAPI + regex-based extraction + spaCy (optional NLP)
+- **Data Source:** JSearch API (RapidAPI)
+- **Deployment:** Netlify (frontend) + Render (backend)
 
 ---
 
-## 🎯 **Examples**
+## 📊 Example Searches
 
-Try searching for:
-- "Software Engineer" in "San Francisco, CA"
-- "Data Scientist" in "Remote"
-- "Product Manager" in "New York, NY"
-
-The platform will analyze job postings and provide comprehensive market insights including skill demand, certification requirements, and AI-powered career recommendations.
+- "Cybersecurity Analyst" — see which security certs are most in demand
+- "SOC Analyst" — compare cert requirements vs cybersecurity analyst
+- "Cloud Security Engineer" — find cloud-specific cert demand
+- "Security Engineer" in "Remote" — remote-specific requirements
 
 ---
 
-## 📄 **License**
+## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-**© 2024 InteliJob. Empowering your career journey.**
+MIT License

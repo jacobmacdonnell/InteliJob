@@ -2,105 +2,61 @@ import axios from 'axios';
 import type { JobCriteria, ReportData, BackendReportData, ExtractedItem } from '../types';
 
 // Backend API configuration
-// const API_BASE_URL = 'http://localhost:8000';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const API_TIMEOUT = 30000; // 30 seconds
+const API_TIMEOUT = 60000;
 
-// Create axios instance with default configuration
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Data quality filters
+// ── Quality Filters (for skills/experience/education only — NOT certs) ──────
+
 const filterQualityData = (items: ExtractedItem[]): ExtractedItem[] => {
   if (!items || items.length === 0) return [];
 
   return items.filter(item => {
-    // Skip items with very low occurrence (noise)
-    if (item.count < 2 && item.percentage < 5) return false;
-    
-    // Skip empty or very short names
+    if (item.count < 1) return false;
     if (!item.name || item.name.trim().length < 2) return false;
-    
-    // Skip items that are too generic or nonsensical
+
     const lowercaseName = item.name.toLowerCase().trim();
     const nonsensicalPatterns = [
-      /^[a-z]{1,2}$/i, // Single or double letters
-      /^\d+$/, // Only numbers
-      /^[^a-zA-Z0-9\s]+$/, // Only special characters
-      /^(and|or|the|a|an|in|on|at|to|for|of|with|by|from)$/i, // Common stop words
-      /^(work|job|role|position|candidate|team|company|business)$/i, // Too generic job terms
-      /^(good|great|excellent|strong|solid|basic|advanced|senior|junior)$/i, // Generic qualifiers
-      /^(ability|knowledge|understanding|experience|skills)$/i, // Generic skill words
-      /^(preferred|required|must|should|nice|plus|bonus)$/i, // Requirement words
-      /^(years?|months?|days?|hours?)$/i, // Time units without context
+      /^[a-z]{1,2}$/i,
+      /^\d+$/,
+      /^[^a-zA-Z0-9\s]+$/,
+      /^(and|or|the|a|an|in|on|at|to|for|of|with|by|from)$/i,
+      /^(work|job|role|position|candidate|team|company|business)$/i,
+      /^(good|great|excellent|strong|solid|basic|advanced|senior|junior)$/i,
+      /^(ability|knowledge|understanding|experience|skills)$/i,
+      /^(preferred|required|must|should|nice|plus|bonus)$/i,
+      /^(years?|months?|days?|hours?)$/i,
     ];
-    
-    if (nonsensicalPatterns.some(pattern => pattern.test(lowercaseName))) {
-      return false;
-    }
-    
-    // Skip items that are too long (likely extraction errors)
+
+    if (nonsensicalPatterns.some(pattern => pattern.test(lowercaseName))) return false;
     if (item.name.length > 100) return false;
-    
     return true;
-  }).slice(0, 15); // Limit to top 15 items for better UX
+  }).slice(0, 15);
 };
 
-// Enhanced skill filtering
 const filterSkills = (items: ExtractedItem[]): ExtractedItem[] => {
   const filtered = filterQualityData(items);
-  
   return filtered.filter(item => {
     const name = item.name.toLowerCase().trim();
-    
-    // Additional skill-specific filters
     const invalidSkillPatterns = [
       /^(using|working|developing|building|creating|managing|leading)$/i,
       /^(software|hardware|technology|tools|platforms|systems)$/i,
-      /^(frontend|backend|fullstack|full-stack)$/i, // Too generic
-      /^(web|mobile|desktop|cloud)$/i, // Too generic without context
+      /^(frontend|backend|fullstack|full-stack)$/i,
+      /^(web|mobile|desktop|cloud)$/i,
     ];
-    
     return !invalidSkillPatterns.some(pattern => pattern.test(name));
   });
 };
 
-// Enhanced certification filtering
-const filterCertifications = (items: ExtractedItem[]): ExtractedItem[] => {
-  const filtered = filterQualityData(items);
-  
-  return filtered.filter(item => {
-    const name = item.name.toLowerCase().trim();
-    
-    // Keep only legitimate certifications
-    const legitimateCertPatterns = [
-      /aws|azure|gcp|google cloud/i,
-      /cisco|ccna|ccnp|ccie/i,
-      /oracle|microsoft|ibm/i,
-      /pmp|scrum|agile|prince2/i,
-      /cissp|cism|cisa|ceh|security\+/i,
-      /comptia|network\+|a\+|linux\+/i,
-      /certified|certificate|certification/i,
-    ];
-    
-    return legitimateCertPatterns.some(pattern => pattern.test(name)) || 
-           name.length > 5; // Allow longer certification names
-  });
-};
-
-// Enhanced experience filtering
 const filterExperience = (items: ExtractedItem[]): ExtractedItem[] => {
   const filtered = filterQualityData(items);
-  
   return filtered.filter(item => {
     const name = item.name.toLowerCase().trim();
-    
-    // Keep only meaningful experience requirements
     const validExperiencePatterns = [
       /\d+.*year/i,
       /\d+.*month/i,
@@ -108,21 +64,22 @@ const filterExperience = (items: ExtractedItem[]): ExtractedItem[] => {
       /junior|senior|mid.level|intermediate/i,
       /minimum|maximum|at least|up to/i,
     ];
-    
     return validExperiencePatterns.some(pattern => pattern.test(name));
   });
 };
 
-// Transform backend data to frontend format with enhanced filtering
+// ── Transform — certs pass straight through, no double-filtering ────────────
+
 const transformBackendData = (backendData: BackendReportData): ReportData => {
   return {
+    // Certs: NO filtering — backend dictionary extraction is authoritative
+    certifications: {
+      title: backendData.certifications?.title || "Top Certifications",
+      items: backendData.certifications?.items || [],
+    },
     skills: {
       title: backendData.skills?.title || "Top Technical Skills",
       items: filterSkills(backendData.skills?.items || []),
-    },
-    certifications: {
-      title: backendData.certifications?.title || "Top Certifications",
-      items: filterCertifications(backendData.certifications?.items || []),
     },
     experience: {
       title: backendData.experience?.title || "Experience Requirements",
@@ -140,26 +97,26 @@ const transformBackendData = (backendData: BackendReportData): ReportData => {
   };
 };
 
+// ── API Calls ───────────────────────────────────────────────────────────────
+
 export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> => {
   try {
     console.log("Fetching job analysis from backend API:", criteria);
-    
+
     const response = await apiClient.post('/analyze-jobs', {
       job_title: criteria.job_title,
       location: criteria.location || null,
       time_range: criteria.time_range || '1d',
     });
 
-    // Check rate limit headers
+    // Rate limit warning
     const remaining = response.headers['x-ratelimit-remaining'];
     if (remaining !== undefined) {
       const remainingCount = parseInt(remaining);
       if (remainingCount <= 5) {
-        // Dispatch a custom event for rate limit notification
-        const event = new CustomEvent('rateLimitWarning', {
+        window.dispatchEvent(new CustomEvent('rateLimitWarning', {
           detail: { remaining: remainingCount }
-        });
-        window.dispatchEvent(event);
+        }));
       }
     }
 
@@ -171,7 +128,6 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
       throw new Error('No data received from the analysis');
     }
 
-    // Validate the response data structure
     const data = response.data.data;
     if (!data.skills || !data.certifications || !data.experience || !data.education) {
       throw new Error('Invalid data structure received from the analysis');
@@ -181,14 +137,12 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
 
   } catch (error: any) {
     console.error("Job analysis failed:", error);
-    
-    // Handle different types of errors
+
     if (axios.isAxiosError(error)) {
       if (error.response) {
-        // Server responded with error status
         const status = error.response.status;
         const errorMessage = error.response.data?.detail || error.response.data?.message || error.message;
-        
+
         if (status === 408) {
           throw new Error("Request timeout - the analysis is taking too long. Please try again.");
         } else if (status === 500) {
@@ -196,6 +150,7 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
         } else if (status === 400) {
           throw new Error(`Invalid request: ${errorMessage}`);
         } else if (status === 429) {
+          window.dispatchEvent(new CustomEvent('rateLimitWarning', { detail: { remaining: 0 } }));
           throw new Error("Rate limit exceeded. Please wait a moment before trying again.");
         } else if (status === 401 || status === 403) {
           throw new Error("Authentication error. Please check your API configuration.");
@@ -203,17 +158,14 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
           throw new Error(`Analysis failed (${status}): ${errorMessage}`);
         }
       } else if (error.request) {
-        // Network error
         throw new Error("Unable to connect to the analysis service. Please check your connection and ensure the backend is running.");
       }
     }
-    
-    // Generic error fallback
+
     throw new Error(error.message || "An unexpected error occurred during job analysis.");
   }
 };
 
-// Health check function for the backend
 export const checkBackendHealth = async (): Promise<boolean> => {
   try {
     const response = await apiClient.get('/health');

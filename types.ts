@@ -15,6 +15,8 @@ export interface ExtractedItem {
   count: number;
   percentage: number;
   sources?: JobSource[];
+  full_name?: string;
+  org?: string;
 }
 
 export interface ReportSection {
@@ -22,7 +24,6 @@ export interface ReportSection {
   items: ExtractedItem[];
 }
 
-// This new type defines the structure for sections coming from the backend
 export interface BackendReportSection {
   title: string;
   items: ExtractedItem[];

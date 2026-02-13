@@ -1,8 +1,8 @@
 import os
 import re
-import asyncio
+import json
 from typing import List, Dict, Optional, Any
-from collections import Counter
+from pathlib import Path
 import httpx
 from fastapi import FastAPI, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 
 # Import settings from config.py
 from config import settings
@@ -22,55 +21,34 @@ from config import settings
 load_dotenv()
 
 # Initialize FastAPI app
-app = FastAPI(title="InteliJob API", version="1.0.0")
+app = FastAPI(title="InteliJob API", version="2.0.0")
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address, 
                   default_limits=[settings.rate_limit_default],
                   strategy=settings.rate_limit_strategy,
-                  # storage_uri="memory://" # Default, suitable for single process. For multi-process (Gunicorn workers), Redis or Memcached is needed.
                   )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Add SlowAPIMiddleware - this must be added BEFORE the routes are defined if you want to use decorators on routes
-# However, for global limits or if you apply limits directly in path operations, its position is less critical.
-# For now, we will apply it to specific routes using decorators.
-
 # CORS Middleware
-# print(f"DEBUG: CORS Origins loaded by FastAPI app: {settings.cors_origins}") # DEBUG line removed
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins, # Use the loaded setting
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load spaCy model (English) - optional
-nlp = None
-try:
-    import spacy
-    nlp = spacy.load("en_core_web_sm")
-    print("✅ spaCy model loaded successfully")
-except ImportError:
-    print("⚠️  spaCy not installed. NLP features will be limited to keyword matching.")
-except IOError:
-    print("⚠️  spaCy English model not found. Please install it with: python -m spacy download en_core_web_sm")
-    print("   NLP features will be limited to keyword matching.")
-
 # Environment configuration
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
-ENABLE_MOCK_DATA = os.getenv("ENABLE_MOCK_DATA", "true" if ENVIRONMENT == "development" else "false").lower() == "true"
-
 print(f"🔧 Environment: {ENVIRONMENT}")
-print(f"🧪 Mock data enabled: {ENABLE_MOCK_DATA}")
 
 # Pydantic models
 class JobSearchRequest(BaseModel):
     job_title: str
     location: Optional[str] = None
-    time_range: Optional[str] = "1d"  # 1d, 3d, 1w, 2w, 1m
+    time_range: Optional[str] = "1d"
 
 class JobAnalysisResponse(BaseModel):
     success: bool
@@ -78,228 +56,35 @@ class JobAnalysisResponse(BaseModel):
     data: Optional[Dict[str, Any]] = None
     jobs_analyzed: int = 0
 
-# Configuration - Use settings from config.py
+# Configuration
 JSEARCH_API_URL = settings.jsearch_api_url
-RAPIDAPI_KEY = settings.rapidapi_key # Ensures consistency with config
-# Note: RAPIDAPI_KEY is also checked by settings.is_rapidapi_configured()
+RAPIDAPI_KEY = settings.rapidapi_key
 
-# Mock job data for DEVELOPMENT/TESTING ONLY
-def get_mock_jobs(job_title: str, location: str = None) -> List[Dict]:
-    """Return mock job data for DEVELOPMENT/TESTING purposes only"""
-    if ENVIRONMENT == "production":
-        raise HTTPException(
-            status_code=500, 
-            detail="Mock data is not available in production environment. Please configure RAPIDAPI_KEY."
-        )
-    
-    job_title_lower = job_title.lower()
-    
-    # Customize mock data based on job title
-    if "software" in job_title_lower or "developer" in job_title_lower or "engineer" in job_title_lower:
-        return [
-            {
-                "job_title": "Senior Software Engineer",
-                "company": "TechCorp Inc",
-                "job_description": """
-                We are seeking a Senior Software Engineer with 5+ years of experience in Python, React, and AWS. 
-                The ideal candidate will have experience with Docker, Kubernetes, and microservices architecture.
-                Required certifications: AWS Certified Solutions Architect, experience with PostgreSQL and Redis.
-                Bachelor's degree required, 3-5 years of experience preferred. Knowledge of JavaScript, TypeScript, 
-                Node.js, and CI/CD pipelines is essential. Experience with Agile development and Scrum methodology.
-                """
-            },
-            {
-                "job_title": "Full Stack Developer",
-                "company": "StartupXYZ",
-                "job_description": """
-                Looking for a Full Stack Developer proficient in JavaScript, React, Node.js, and MongoDB. 
-                Must have 2+ years of experience with modern web frameworks and RESTful APIs. 
-                Experience with Git, Jenkins, and cloud platforms (AWS, Azure, GCP) preferred.
-                Understanding of responsive design, HTML5, CSS3, and modern frontend build tools.
-                Minimum 2 years experience, bachelor's degree in computer science or related field.
-                """
-            },
-            {
-                "job_title": "Python Developer",
-                "company": "FinTech Solutions",
-                "job_description": """
-                Senior Python Developer needed for fintech startup. 5-7 years experience required.
-                Strong background in Django, Flask, PostgreSQL, and Redis. Experience with Docker,
-                Kubernetes, and AWS cloud services. Knowledge of machine learning libraries like
-                TensorFlow, scikit-learn, pandas, and numpy. Certified AWS Developer preferred.
-                Experience with financial systems and trading algorithms a plus. Masters degree preferred.
-                """
-            },
-            {
-                "job_title": "DevOps Engineer",
-                "company": "CloudFirst Ltd",
-                "job_description": """
-                DevOps Engineer position requiring expertise in Terraform, Ansible, Docker, and Kubernetes.
-                3+ years experience with CI/CD pipelines using Jenkins or GitLab CI. 
-                AWS certification required (Solutions Architect or DevOps Engineer).
-                Experience with monitoring tools like Prometheus, Grafana, and ELK stack.
-                Bachelor's degree and 3-5 years of experience in infrastructure automation.
-                """
-            },
-            {
-                "job_title": "Frontend Developer",
-                "company": "Digital Agency Pro",
-                "job_description": """
-                Front-end Developer role focusing on React, TypeScript, and modern JavaScript.
-                2-4 years experience with responsive web design and cross-browser compatibility.
-                Experience with state management (Redux, Context API), testing frameworks (Jest, Cypress),
-                and build tools (Webpack, Vite). Knowledge of CSS preprocessors and UI libraries.
-                Bachelor's degree and 2+ years of frontend development experience required.
-                """
-            },
-            {
-                "job_title": "Backend Engineer",
-                "company": "ScaleUp Tech",
-                "job_description": """
-                Backend Engineer with expertise in Node.js, Express, and database design.
-                4+ years experience with microservices, API development, and system architecture.
-                Proficiency in PostgreSQL, MongoDB, Redis, and cloud platforms (AWS, GCP).
-                Experience with containerization (Docker), orchestration (Kubernetes), and CI/CD.
-                Strong understanding of security best practices and performance optimization.
-                """
-            },
-            {
-                "job_title": "Software Engineer II",
-                "company": "Enterprise Corp",
-                "job_description": """
-                Mid-level Software Engineer position requiring 3+ years experience in Java, Spring Boot.
-                Experience with microservices architecture, REST APIs, and database management.
-                Knowledge of AWS services, Docker, and Kubernetes for cloud deployment.
-                Familiarity with Agile methodologies and modern development practices.
-                Bachelor's degree in Computer Science and 3-5 years relevant experience.
-                """
-            },
-            {
-                "job_title": "Mobile Developer",
-                "company": "AppStudio Inc",
-                "job_description": """
-                React Native Developer with 2+ years experience building cross-platform applications.
-                Proficiency in JavaScript, TypeScript, and mobile app development best practices.
-                Experience with native iOS/Android development, app store deployment processes.
-                Knowledge of state management, testing frameworks, and performance optimization.
-                Bachelor's degree and 2-4 years of mobile development experience required.
-                """
-            }
-        ]
-    elif "data" in job_title_lower or "analyst" in job_title_lower:
-        return [
-            {
-                "job_description": """
-                Data Scientist position requiring 3+ years experience with Python, R, and SQL.
-                Strong background in machine learning, statistical analysis, and data visualization.
-                Experience with Tableau, Power BI, pandas, numpy, scikit-learn, and TensorFlow.
-                AWS or Google Cloud certification preferred. Master's degree in statistics,
-                mathematics, or related quantitative field. 3-5 years of experience required.
-                """
-            },
-            {
-                "job_description": """
-                Business Intelligence Analyst with expertise in SQL, Tableau, and data warehousing.
-                2+ years experience with ETL processes and database design. Knowledge of Python
-                for data analysis and automation. Experience with cloud platforms and big data
-                technologies like Spark and Hadoop. Bachelor's degree and 2-4 years experience.
-                """
-            },
-            {
-                "job_description": """
-                Senior Data Engineer needed for building scalable data pipelines. 4+ years experience
-                with Python, Spark, Kafka, and Airflow. Strong SQL skills and experience with
-                cloud data platforms (AWS, GCP, Azure). Knowledge of data modeling and warehousing
-                concepts. Experience with real-time data processing and distributed systems.
-                Bachelor's degree in computer science and 4-6 years relevant experience.
-                """
-            }
-        ]
-    elif "cyber" in job_title_lower or "security" in job_title_lower:
-        return [
-            {
-                "job_description": """
-                Cybersecurity Analyst position requiring 3+ years experience in information security.
-                CISSP, CISM, or Security+ certification required. Experience with SIEM tools,
-                vulnerability assessment, and incident response. Knowledge of network security,
-                firewalls, and intrusion detection systems. Understanding of compliance frameworks
-                like SOC2, ISO 27001. Bachelor's degree and 3-5 years security experience required.
-                """
-            },
-            {
-                "job_description": """
-                Senior Security Engineer with expertise in cloud security (AWS, Azure, GCP).
-                5+ years experience with security architecture and risk assessment. 
-                Certified Ethical Hacker (CEH) or equivalent certification preferred.
-                Experience with security tools like Nessus, Wireshark, and penetration testing.
-                Strong background in cryptography and secure coding practices. Masters preferred.
-                """
-            },
-            {
-                "job_description": """
-                Information Security Specialist focusing on threat analysis and incident response.
-                2-4 years experience with security monitoring and forensics. GCIH or GCFA
-                certification preferred. Experience with threat intelligence platforms and
-                malware analysis. Knowledge of scripting languages (Python, PowerShell) for
-                automation. Bachelor's degree in cybersecurity or related field required.
-                """
-            }
-        ]
-    else:
-        # Generic mock data for other job titles
-        return [
-            {
-                "job_description": """
-                Professional position requiring 2-5 years of relevant experience. Bachelor's degree
-                preferred. Strong communication skills and ability to work in team environment.
-                Experience with project management tools and methodologies. Knowledge of industry
-                best practices and current technologies. Certification in relevant field preferred.
-                """
-            },
-            {
-                "job_description": """
-                Entry to mid-level position seeking candidates with 1-3 years experience.
-                Technical skills in relevant software and tools required. Strong analytical
-                and problem-solving abilities. Experience with data analysis and reporting.
-                Bachelor's degree in related field. Professional certifications a plus.
-                """
-            }
-        ]
+# ── Cert Dictionary ──────────────────────────────────────────────────────────
+# Load cert dictionary from JSON file
+CERT_DICT_PATH = Path(__file__).parent / "certs.json"
+CERT_DICTIONARY: Dict[str, Dict] = {}
 
-# Predefined certification patterns (case-insensitive)
-CERTIFICATION_PATTERNS = [
-    # Cloud Certifications
-    r'\b(?:AWS|Amazon Web Services)\s*(?:Certified|Certificate)?\s*(?:Solutions?\s*Architect|Developer|SysOps|DevOps|Cloud\s*Practitioner|Security|Machine\s*Learning|Data\s*Analytics)\b',
-    r'\b(?:Azure|Microsoft\s*Azure)\s*(?:Certified|Certificate)?\s*(?:Solutions?\s*Architect|Developer|Administrator|DevOps|Security|AI|Data)\b',
-    r'\bGoogle\s*Cloud\s*(?:Certified|Certificate)?\s*(?:Professional|Associate)?\s*(?:Cloud\s*Architect|Data\s*Engineer|Cloud\s*Developer|DevOps|Security)\b',
-    r'\bGCP\s*(?:Certified|Certificate)?\s*(?:Professional|Associate)?\s*(?:Cloud\s*Architect|Data\s*Engineer|Cloud\s*Developer|DevOps|Security)\b',
-    
-    # Programming & Development
-    r'\bCertified\s*(?:Java|Python|JavaScript|C\#|C\+\+)\s*(?:Developer|Programmer)\b',
-    r'\bOracle\s*Certified\s*(?:Professional|Associate)\s*Java\s*(?:Developer|Programmer)\b',
-    r'\bMicrosoft\s*Certified\s*(?:Professional|Solutions|Technology\s*Specialist)\b',
-    
-    # Security Certifications
-    r'\b(?:CISSP|CISM|CISA|CEH|Security\+|CySA\+|GSEC|CISSP)\b',
-    r'\bCertified\s*(?:Information|Ethical)\s*(?:Security|Hacker)\s*(?:Professional|Manager|Auditor|Analyst)\b',
-    
-    # Database Certifications
-    r'\b(?:Oracle|Microsoft|MySQL|PostgreSQL|MongoDB)\s*(?:Certified|Certificate)?\s*(?:Database|DBA|Administrator|Developer)\b',
-    
-    # Project Management
-    r'\b(?:PMP|PRINCE2|Agile|Scrum\s*Master|Certified\s*Scrum\s*Master|CSM|PMI|CAPM)\b',
-    
-    # Network & Infrastructure
-    r'\b(?:CCNA|CCNP|CCIE|CompTIA|Network\+|A\+|Linux\+|Server\+)\b',
-    r'\bCisco\s*Certified\s*(?:Network|Design|Security|Voice)\s*(?:Associate|Professional|Expert)\b',
-    
-    # Data & Analytics
-    r'\bTableau\s*(?:Certified|Certificate)?\s*(?:Desktop|Server|Data\s*Analyst)\b',
-    r'\bSAS\s*(?:Certified|Certificate)?\s*(?:Base|Advanced|Statistical|Business\s*Analyst)\b',
-    r'\bCertified\s*(?:Data\s*Scientist|Analytics\s*Professional|Business\s*Intelligence|Data\s*Analyst)\b',
-]
+try:
+    with open(CERT_DICT_PATH, "r", encoding="utf-8") as f:
+        CERT_DICTIONARY = json.load(f)
+    print(f"✅ Loaded {len(CERT_DICTIONARY)} certifications from certs.json")
+except FileNotFoundError:
+    print("⚠️  certs.json not found — cert extraction will be limited")
+except json.JSONDecodeError as e:
+    print(f"⚠️  Error parsing certs.json: {e}")
 
-# Technical skills patterns (will be enhanced by spaCy NLP)
+# Build lookup structures for efficient matching
+# We match both the abbreviation and the full name
+_cert_lookup: List[tuple] = []  # (search_term_lower, canonical_name, info)
+for abbrev, info in CERT_DICTIONARY.items():
+    _cert_lookup.append((abbrev.lower(), abbrev, info))
+    full = info.get("full_name", "")
+    if full and full.lower() != abbrev.lower():
+        _cert_lookup.append((full.lower(), abbrev, info))
+
+
+# ── Technical Skills Keywords ────────────────────────────────────────────────
 TECH_SKILLS_KEYWORDS = [
     # Programming Languages
     'python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin',
@@ -317,71 +102,50 @@ TECH_SKILLS_KEYWORDS = [
     'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'gitlab', 'github actions', 'terraform',
     'ansible', 'chef', 'puppet', 'vagrant', 'circleci', 'travis ci',
     
+    # Security Tools (important for cybersecurity searches)
+    'splunk', 'wireshark', 'nessus', 'metasploit', 'burp suite', 'nmap', 'snort', 'suricata',
+    'crowdstrike', 'sentinel', 'qradar', 'qualys', 'tenable', 'rapid7',
+    'kali linux', 'siem', 'soar', 'edr', 'xdr', 'ids', 'ips', 'waf', 'dlp',
+    
     # Data & Analytics
     'tableau', 'power bi', 'pandas', 'numpy', 'scikit-learn', 'tensorflow', 'pytorch', 'keras',
-    'spark', 'hadoop', 'kafka', 'airflow', 'jupyter', 'r studio',
-    
-    # Mobile Development
-    'ios', 'android', 'react native', 'flutter', 'xamarin', 'cordova', 'ionic',
+    'spark', 'hadoop', 'kafka', 'airflow', 'jupyter',
     
     # Testing & Quality
     'selenium', 'cypress', 'junit', 'pytest', 'jest', 'mocha', 'postman', 'jmeter',
 ]
 
-# Updated Experience patterns
+# ── Experience Patterns ──────────────────────────────────────────────────────
 EXPERIENCE_PATTERNS = [
-    # Pattern for "X-Y years" or "X to Y years"
     r'(\d+)\s*(?:to|-)\s*(\d+)\s*\+?\s*years?',
-    # Pattern for "X+ years" or "minimum X years" or "at least X years"
     r'(?:minimum|min|at least|over|more than)\s*(\d+)\s*\+?\s*years?',
     r'(\d+)\+\s*years?',
-    # Pattern for "X years" (specific number)
     r'(\d+)\s*years?',
-    # Pattern for entry level (less common, but good to have)
     r'entry\s*level',
     r'junior\s*level',
 ]
 
-# Education patterns
+# ── Education Patterns ───────────────────────────────────────────────────────
 EDUCATION_PATTERNS = [
-    # Bachelor's degree patterns
-    r'\b(?:Bachelor\'s|Bachelor|BS|BA|B\.S\.|B\.A\.)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b',
-    r'\b(?:Bachelor\'s|Bachelor|BS|BA|B\.S\.|B\.A\.)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:or higher|or above)?\b',
-    
-    # Master's degree patterns
-    r'\b(?:Master\'s|Master|MS|MA|M\.S\.|M\.A\.)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b',
-    r'\b(?:Master\'s|Master|MS|MA|M\.S\.|M\.A\.)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:or higher|or above)?\b',
-    
-    # PhD/Doctorate patterns
-    r'\b(?:PhD|Ph\.D\.|Doctorate|Doctoral)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b',
-    
-    # Associate's degree patterns
-    r'\b(?:Associate\'s|Associate|AA|AS|A\.A\.|A\.S\.)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b',
-    
-    # General education patterns
-    r'\b(?:degree|diploma|certificate)\s*(?:in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b',
+    r"\b(?:Bachelor's|Bachelor|BS|BA|B\.S\.|B\.A\.)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b",
+    r"\b(?:Master's|Master|MS|MA|M\.S\.|M\.A\.)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b",
+    r"\b(?:PhD|Ph\.D\.|Doctorate|Doctoral)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b",
+    r"\b(?:Associate's|Associate|AA|AS|A\.A\.|A\.S\.)\s*(?:degree|in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b",
+    r"\b(?:degree|diploma|certificate)\s*(?:in|of)?\s*(?:[A-Za-z\s]+)?\s*(?:required|preferred|or equivalent)?\b",
 ]
 
+
+# ── Job Fetching ─────────────────────────────────────────────────────────────
+
 async def fetch_jobs_from_jsearch(job_title: str, location: str = None, date_posted: str = "today") -> List[Dict]:
-    """Fetch job postings from JSearch API or return mock data in development"""
+    """Fetch job postings from JSearch API."""
     
-    # Check if we have API key
     if not RAPIDAPI_KEY:
-        if ENVIRONMENT == "production":
-            raise HTTPException(
-                status_code=500, 
-                detail="RapidAPI key is required in production environment. Please configure RAPIDAPI_KEY environment variable."
-            )
-        elif ENABLE_MOCK_DATA:
-            print("🧪 Using mock data for development/testing - RAPIDAPI_KEY not configured")
-            return get_mock_jobs(job_title, location)
-        else:
-            raise HTTPException(
-                status_code=500, 
-                detail="RAPIDAPI_KEY not configured and mock data is disabled. Please set RAPIDAPI_KEY or enable mock data with ENABLE_MOCK_DATA=true"
-            )
+        raise HTTPException(
+            status_code=500, 
+            detail="RAPIDAPI_KEY not configured. Please set the RAPIDAPI_KEY environment variable."
+        )
     
-    # Use real API
     headers = {
         "X-RapidAPI-Key": RAPIDAPI_KEY,
         "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
@@ -390,7 +154,7 @@ async def fetch_jobs_from_jsearch(job_title: str, location: str = None, date_pos
     params = {
         "query": job_title,
         "page": "1",
-        "num_pages": "2",  # Increased from 1 to 2 for more jobs (usually 20-30 total)
+        "num_pages": "10",  # ~100 jobs for meaningful cert rankings
         "date_posted": date_posted,
     }
     
@@ -398,7 +162,7 @@ async def fetch_jobs_from_jsearch(job_title: str, location: str = None, date_pos
         params["query"] = f"{job_title} in {location}"
     
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.get(JSEARCH_API_URL, headers=headers, params=params)
             response.raise_for_status()
             data = response.json()
@@ -410,34 +174,51 @@ async def fetch_jobs_from_jsearch(job_title: str, location: str = None, date_pos
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching jobs: {str(e)}")
 
+
+# ── Text Cleaning ────────────────────────────────────────────────────────────
+
 def clean_job_description(description: str) -> str:
-    """Clean and normalize job description text"""
+    """Clean and normalize job description text."""
     if not description:
         return ""
-    
-    # Remove HTML tags
-    description = re.sub(r'<[^>]+>', ' ', description)
-    
-    # Remove extra whitespace
-    description = re.sub(r'\s+', ' ', description)
-    
-    # Remove special characters except periods, commas, and hyphens
-    description = re.sub(r'[^\w\s\.\,\-\+\#]', ' ', description)
-    
+    description = re.sub(r'<[^>]+>', ' ', description)  # Remove HTML tags
+    description = re.sub(r'\s+', ' ', description)  # Normalize whitespace
+    description = re.sub(r'[^\w\s\.\,\-\+\#]', ' ', description)  # Remove special chars
     return description.strip()
 
+
+# ── Extraction Functions ─────────────────────────────────────────────────────
+
 def extract_certifications_with_sources(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
-    """Extract certifications with job source information"""
+    """Extract certifications using dictionary lookup — no regex fragility."""
     certifications = []
     text_lower = text.lower()
+    seen = set()  # Avoid duplicate certs from same job description
     
-    for pattern in CERTIFICATION_PATTERNS:
-        matches = re.finditer(pattern, text, re.IGNORECASE)
-        for match in matches:
-            cert = match.group().strip()
-            if cert and len(cert) > 2:
+    for search_term, canonical_name, info in _cert_lookup:
+        if canonical_name in seen:
+            continue
+        
+        # For short abbreviations (≤3 chars like "A+", "R"), require word boundaries
+        if len(search_term) <= 3:
+            pattern = r'\b' + re.escape(search_term) + r'\b'
+            if re.search(pattern, text_lower):
+                seen.add(canonical_name)
                 certifications.append({
-                    "name": cert,
+                    "name": canonical_name,
+                    "full_name": info.get("full_name", canonical_name),
+                    "org": info.get("org", ""),
+                    "source_job": f"{job_title} at {company}",
+                    "company": company,
+                    "job_url": job_url
+                })
+        else:
+            if search_term in text_lower:
+                seen.add(canonical_name)
+                certifications.append({
+                    "name": canonical_name,
+                    "full_name": info.get("full_name", canonical_name),
+                    "org": info.get("org", ""),
                     "source_job": f"{job_title} at {company}",
                     "company": company,
                     "job_url": job_url
@@ -445,12 +226,12 @@ def extract_certifications_with_sources(text: str, job_title: str, company: str 
     
     return certifications
 
+
 def extract_technical_skills_with_sources(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
-    """Extract technical skills with job source information"""
+    """Extract technical skills using keyword matching."""
     skills = []
     text_lower = text.lower()
     
-    # Keyword-based extraction
     for skill in TECH_SKILLS_KEYWORDS:
         skill_pattern = r'\b' + re.escape(skill.lower()) + r'\b'
         if re.search(skill_pattern, text_lower):
@@ -461,33 +242,18 @@ def extract_technical_skills_with_sources(text: str, job_title: str, company: st
                 "job_url": job_url
             })
     
-    # NLP-based extraction if spaCy is available
-    if nlp:
-        doc = nlp(text)
-        for ent in doc.ents:
-            if ent.label_ in ["ORG", "PRODUCT", "LANGUAGE"] and len(ent.text) > 2:
-                # Filter for tech-related entities
-                ent_lower = ent.text.lower()
-                if any(tech_word in ent_lower for tech_word in ['tech', 'soft', 'program', 'develop', 'data', 'web', 'mobile', 'cloud']):
-                    skills.append({
-                        "name": ent.text.title(),
-                        "source_job": f"{job_title} at {company}",
-                        "company": company,
-                        "job_url": job_url
-                    })
-    
     return skills
 
+
 def normalize_experience_text(text: str) -> Optional[str]:
+    """Normalize experience strings to consistent format."""
     text = text.lower().strip()
 
-    # Pattern for "X-Y years" or "X to Y years"
     match = re.fullmatch(r'(\d+)\s*(?:to|-)\s*(\d+)\s*\+?\s*years?', text)
     if match:
         num1, num2 = int(match.group(1)), int(match.group(2))
         return f"{min(num1, num2)}-{max(num1, num2)} Years"
 
-    # Pattern for "X+ years" or "minimum X years" or "at least X years"
     match = re.fullmatch(r'(?:minimum|min|at least|over|more than)\s*(\d+)\s*\+?\s*years?', text)
     if match:
         return f"{match.group(1)}+ Years"
@@ -495,12 +261,10 @@ def normalize_experience_text(text: str) -> Optional[str]:
     if match:
         return f"{match.group(1)}+ Years"
 
-    # Pattern for "X years" (specific number)
     match = re.fullmatch(r'(\d+)\s*years?', text)
     if match:
         return f"{match.group(1)} Years"
 
-    # Pattern for entry level
     if 'entry level' in text or 'entry-level' in text:
         return "Entry Level"
     if 'junior level' in text:
@@ -516,7 +280,9 @@ def normalize_experience_text(text: str) -> Optional[str]:
         return text.capitalize()
     return None
 
+
 def extract_experience_with_sources(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
+    """Extract experience requirements from text."""
     experience_requirements = []
     processed_texts = set()
 
@@ -539,8 +305,9 @@ def extract_experience_with_sources(text: str, job_title: str, company: str = "U
                 })
     return experience_requirements
 
+
 def extract_education_with_sources(text: str, job_title: str, company: str = "Unknown", job_url: str = None) -> List[Dict]:
-    """Extract education requirements with job source information"""
+    """Extract education requirements from text."""
     education_requirements = []
     processed_texts = set()
     
@@ -552,9 +319,7 @@ def extract_education_with_sources(text: str, job_title: str, company: str = "Un
                 continue
             processed_texts.add(edu_text)
             
-            # Clean up the education text
-            edu_text = re.sub(r'\s+', ' ', edu_text)  # Normalize whitespace
-            edu_text = edu_text.strip()
+            edu_text = re.sub(r'\s+', ' ', edu_text).strip()
             
             if edu_text and len(edu_text) > 2:
                 education_requirements.append({
@@ -566,91 +331,89 @@ def extract_education_with_sources(text: str, job_title: str, company: str = "Un
     
     return education_requirements
 
-def aggregate_and_rank_with_sources(items: List[Dict], top_n: int = 10) -> List[Dict[str, Any]]:
-    """Aggregate items by frequency and return top N with source job information"""
+
+# ── Aggregation & Ranking ────────────────────────────────────────────────────
+
+def aggregate_and_rank_with_sources(items: List[Dict], total_jobs: int, top_n: int = 10) -> List[Dict[str, Any]]:
+    """
+    Aggregate items and rank by how many jobs mention them.
+    percentage = (jobs_mentioning / total_jobs) * 100
+    """
     if not items:
         return []
     
-    # Group by item name
-    item_groups = {}
+    # Group by item name, tracking unique jobs
+    item_groups: Dict[str, Dict] = {}
     for item in items:
         name = item["name"]
         if name not in item_groups:
             item_groups[name] = {
                 "name": name,
-                "count": 0,
-                "sources": []
+                "jobs": set(),  # Track unique job sources
+                "sources": [],
             }
-        item_groups[name]["count"] += 1
+        # Use source_job as unique identifier for deduplication
+        item_groups[name]["jobs"].add(item["source_job"])
         item_groups[name]["sources"].append({
             "job": item["source_job"],
             "company": item["company"],
             "job_url": item.get("job_url")
         })
     
-    # Sort by count and get top N
-    # Ensure top_n is applied correctly
-    sorted_item_values = sorted(item_groups.values(), key=lambda x: x["count"], reverse=True)
+    # Sort by number of unique jobs mentioning this item
+    sorted_items = sorted(item_groups.values(), key=lambda x: len(x["jobs"]), reverse=True)
     
-    # If top_n is provided and positive, slice the list. Otherwise, return all items.
     if top_n and top_n > 0:
-         final_sorted_items = sorted_item_values[:top_n]
-    else:
-         final_sorted_items = sorted_item_values
-
-    # Calculate percentages and format
-    # total_items_for_percentage = sum(item['count'] for item in final_sorted_items) # Use sum of counts in top_n for percentage
-    # If we want percentage relative to all unique items found before top_n, then:
-    # total_items_for_percentage = sum(item['count'] for item in sorted_item_values)
-    # For now, let's use the count of all items passed into the function for consistency with other sections
-    total_items_count_in_all_jobs = sum(item['count'] for item in item_groups.values())
-
-
-    ranked_items = []
+        sorted_items = sorted_items[:top_n]
     
-    for item in final_sorted_items: # Iterate over the potentially sliced list
-        # Remove duplicate sources
+    ranked_items = []
+    for item in sorted_items:
+        # Deduplicate sources
         unique_sources = []
         seen_sources = set()
         for source in item["sources"]:
-            source_key = f"{source['job']}-{source['company']}" # More robust key
+            source_key = f"{source['job']}-{source['company']}"
             if source_key not in seen_sources:
                 unique_sources.append(source)
                 seen_sources.add(source_key)
         
+        job_count = len(item["jobs"])
         ranked_items.append({
             "name": item["name"],
-            "count": item["count"],
-            # Calculate percentage relative to the total count of all unique items found
-            "percentage": round((item["count"] / total_items_count_in_all_jobs) * 100, 1) if total_items_count_in_all_jobs > 0 else 0,
+            "count": job_count,
+            "percentage": round((job_count / total_jobs) * 100, 1) if total_jobs > 0 else 0,
             "sources": unique_sources[:5]  # Limit to 5 sources for UI performance
         })
     
     return ranked_items
 
+
+# ── API Routes ───────────────────────────────────────────────────────────────
+
 @app.get("/")
 @limiter.exempt
 async def root():
-    """Health check endpoint"""
-    return {"message": "InteliJob API", "status": "running"}
+    """Root endpoint."""
+    return {"message": "InteliJob API", "status": "running", "version": "2.0.0"}
+
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
 @limiter.limit(settings.rate_limit_default)
 async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
-    """Main endpoint to analyze job postings"""
+    """Main endpoint to analyze job postings."""
     try:
         # Map time range to JSearch API format
         date_posted_map = {
             "1d": "today",
             "3d": "3days",
             "7d": "week",
-            "14d": "month",  # JSearch doesn't have 2 weeks, using month
+            "14d": "month",
             "30d": "month"
         }
         
         date_posted = date_posted_map.get(payload.time_range, "today")
         
-        # Fetch jobs from JSearch API
+        # Fetch jobs
         jobs = await fetch_jobs_from_jsearch(
             job_title=payload.job_title,
             location=payload.location,
@@ -668,38 +431,32 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
         all_certifications = []
         all_skills = []
         all_experience = []
-        all_education = []  # Add education list
+        all_education = []
         
-        jobs_with_descriptions_count = 0
+        jobs_with_descriptions = 0
         for job in jobs:
             description = job.get("job_description", "")
             if not description:
                 continue
-            jobs_with_descriptions_count +=1
+            jobs_with_descriptions += 1
                 
             cleaned_description = clean_job_description(description)
             
-            # Get actual job details for source tracking
             actual_job_title = job.get("job_title", "Job Posting")
             company_name = job.get("company_name", job.get("employer_name", "Unknown Company"))
             job_posting_url = job.get("job_apply_link", job.get("job_url"))
 
-            # Extract certifications, skills, experience, and education
-            certifications = extract_certifications_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url)
-            skills = extract_technical_skills_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url)
-            experience = extract_experience_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url)
-            education = extract_education_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url)
-            
-            all_certifications.extend(certifications)
-            all_skills.extend(skills)
-            all_experience.extend(experience)
-            all_education.extend(education)
+            all_certifications.extend(extract_certifications_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url))
+            all_skills.extend(extract_technical_skills_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url))
+            all_experience.extend(extract_experience_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url))
+            all_education.extend(extract_education_with_sources(cleaned_description, actual_job_title, company_name, job_posting_url))
         
-        # Aggregate and rank results
-        top_certifications = aggregate_and_rank_with_sources(all_certifications, 10)
-        top_skills = aggregate_and_rank_with_sources(all_skills, 15)
-        top_experience = aggregate_and_rank_with_sources(all_experience, 8)
-        top_education = aggregate_and_rank_with_sources(all_education, 5)  # Limit to top 5 education requirements
+        # Aggregate and rank — now using "% of jobs" metric
+        total = jobs_with_descriptions if jobs_with_descriptions > 0 else len(jobs)
+        top_certifications = aggregate_and_rank_with_sources(all_certifications, total, 15)
+        top_skills = aggregate_and_rank_with_sources(all_skills, total, 15)
+        top_experience = aggregate_and_rank_with_sources(all_experience, total, 8)
+        top_education = aggregate_and_rank_with_sources(all_education, total, 5)
         
         analysis_data = {
             "certifications": { "title": "Top Certifications", "items": top_certifications},
@@ -707,7 +464,7 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
             "experience": { "title": "Experience Requirements", "items": top_experience},
             "education": { "title": "Education Requirements", "items": top_education},
             "total_jobs_found": len(jobs),
-            "jobs_with_descriptions": jobs_with_descriptions_count,
+            "jobs_with_descriptions": jobs_with_descriptions,
             "search_criteria": {
                 "job_title": payload.job_title,
                 "location": payload.location,
@@ -722,28 +479,25 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
             jobs_analyzed=len(jobs)
         )
         
-    except HTTPException: # Re-raise HTTPException directly
+    except HTTPException:
         raise
     except Exception as e:
-        # Log the exception for debugging
         print(f"Unhandled error during analysis: {e}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred during analysis. Please try again later.")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during analysis. Please try again later.")
 
 
 @app.get("/health")
 @limiter.exempt
 async def health_check():
-    """Detailed health check with environment information"""
+    """Health check endpoint."""
     return {
         "status": "healthy",
         "environment": ENVIRONMENT,
-        "mock_data_enabled": ENABLE_MOCK_DATA,
-        "spacy_loaded": nlp is not None,
         "rapidapi_configured": bool(RAPIDAPI_KEY),
-        "data_source": "live_api" if RAPIDAPI_KEY else ("mock_data" if ENABLE_MOCK_DATA else "none"),
-        "version": "1.0.0"
+        "certs_loaded": len(CERT_DICTIONARY),
+        "version": "2.0.0"
     }
 
 if __name__ == "__main__":

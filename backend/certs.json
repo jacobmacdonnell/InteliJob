@@ -1,0 +1,254 @@
+{
+    "CISSP": {
+        "full_name": "Certified Information Systems Security Professional",
+        "org": "ISC2"
+    },
+    "CISM": {
+        "full_name": "Certified Information Security Manager",
+        "org": "ISACA"
+    },
+    "CISA": {
+        "full_name": "Certified Information Systems Auditor",
+        "org": "ISACA"
+    },
+    "CEH": {
+        "full_name": "Certified Ethical Hacker",
+        "org": "EC-Council"
+    },
+    "SSCP": {
+        "full_name": "Systems Security Certified Practitioner",
+        "org": "ISC2"
+    },
+    "HCISPP": {
+        "full_name": "HealthCare Information Security and Privacy Practitioner",
+        "org": "ISC2"
+    },
+    "CCSP": {
+        "full_name": "Certified Cloud Security Professional",
+        "org": "ISC2"
+    },
+    "CCSK": {
+        "full_name": "Certificate of Cloud Security Knowledge",
+        "org": "CSA"
+    },
+    "Security+": {
+        "full_name": "CompTIA Security+",
+        "org": "CompTIA"
+    },
+    "CySA+": {
+        "full_name": "CompTIA Cybersecurity Analyst",
+        "org": "CompTIA"
+    },
+    "CASP+": {
+        "full_name": "CompTIA Advanced Security Practitioner",
+        "org": "CompTIA"
+    },
+    "PenTest+": {
+        "full_name": "CompTIA PenTest+",
+        "org": "CompTIA"
+    },
+    "Network+": {
+        "full_name": "CompTIA Network+",
+        "org": "CompTIA"
+    },
+    "A+": {
+        "full_name": "CompTIA A+",
+        "org": "CompTIA"
+    },
+    "Linux+": {
+        "full_name": "CompTIA Linux+",
+        "org": "CompTIA"
+    },
+    "Cloud+": {
+        "full_name": "CompTIA Cloud+",
+        "org": "CompTIA"
+    },
+    "Server+": {
+        "full_name": "CompTIA Server+",
+        "org": "CompTIA"
+    },
+    "OSCP": {
+        "full_name": "Offensive Security Certified Professional",
+        "org": "OffSec"
+    },
+    "OSCE": {
+        "full_name": "Offensive Security Certified Expert",
+        "org": "OffSec"
+    },
+    "OSWE": {
+        "full_name": "Offensive Security Web Expert",
+        "org": "OffSec"
+    },
+    "OSEP": {
+        "full_name": "Offensive Security Experienced Penetration Tester",
+        "org": "OffSec"
+    },
+    "OSED": {
+        "full_name": "Offensive Security Exploit Developer",
+        "org": "OffSec"
+    },
+    "OSDA": {
+        "full_name": "Offensive Security Defense Analyst",
+        "org": "OffSec"
+    },
+    "GSEC": {
+        "full_name": "GIAC Security Essentials",
+        "org": "SANS/GIAC"
+    },
+    "GCIH": {
+        "full_name": "GIAC Certified Incident Handler",
+        "org": "SANS/GIAC"
+    },
+    "GCFA": {
+        "full_name": "GIAC Certified Forensic Analyst",
+        "org": "SANS/GIAC"
+    },
+    "GPEN": {
+        "full_name": "GIAC Penetration Tester",
+        "org": "SANS/GIAC"
+    },
+    "GWAPT": {
+        "full_name": "GIAC Web Application Penetration Tester",
+        "org": "SANS/GIAC"
+    },
+    "GXPN": {
+        "full_name": "GIAC Exploit Researcher and Advanced Penetration Tester",
+        "org": "SANS/GIAC"
+    },
+    "GNFA": {
+        "full_name": "GIAC Network Forensic Analyst",
+        "org": "SANS/GIAC"
+    },
+    "GREM": {
+        "full_name": "GIAC Reverse Engineering Malware",
+        "org": "SANS/GIAC"
+    },
+    "GCIA": {
+        "full_name": "GIAC Certified Intrusion Analyst",
+        "org": "SANS/GIAC"
+    },
+    "GCFE": {
+        "full_name": "GIAC Certified Forensic Examiner",
+        "org": "SANS/GIAC"
+    },
+    "GMON": {
+        "full_name": "GIAC Continuous Monitoring",
+        "org": "SANS/GIAC"
+    },
+    "CCNA": {
+        "full_name": "Cisco Certified Network Associate",
+        "org": "Cisco"
+    },
+    "CCNP": {
+        "full_name": "Cisco Certified Network Professional",
+        "org": "Cisco"
+    },
+    "CCIE": {
+        "full_name": "Cisco Certified Internetwork Expert",
+        "org": "Cisco"
+    },
+    "CCNA Security": {
+        "full_name": "Cisco Certified Network Associate Security",
+        "org": "Cisco"
+    },
+    "CCNP Security": {
+        "full_name": "Cisco Certified Network Professional Security",
+        "org": "Cisco"
+    },
+    "CRISC": {
+        "full_name": "Certified in Risk and Information Systems Control",
+        "org": "ISACA"
+    },
+    "CGEIT": {
+        "full_name": "Certified in the Governance of Enterprise IT",
+        "org": "ISACA"
+    },
+    "CDPSE": {
+        "full_name": "Certified Data Privacy Solutions Engineer",
+        "org": "ISACA"
+    },
+    "PMP": {
+        "full_name": "Project Management Professional",
+        "org": "PMI"
+    },
+    "CAPM": {
+        "full_name": "Certified Associate in Project Management",
+        "org": "PMI"
+    },
+    "CSM": {
+        "full_name": "Certified Scrum Master",
+        "org": "Scrum Alliance"
+    },
+    "CKA": {
+        "full_name": "Certified Kubernetes Administrator",
+        "org": "CNCF"
+    },
+    "CKAD": {
+        "full_name": "Certified Kubernetes Application Developer",
+        "org": "CNCF"
+    },
+    "CKS": {
+        "full_name": "Certified Kubernetes Security Specialist",
+        "org": "CNCF"
+    },
+    "PCNSE": {
+        "full_name": "Palo Alto Networks Certified Network Security Engineer",
+        "org": "Palo Alto Networks"
+    },
+    "PCNSA": {
+        "full_name": "Palo Alto Networks Certified Network Security Administrator",
+        "org": "Palo Alto Networks"
+    },
+    "CNSP": {
+        "full_name": "Certified Network Security Practitioner",
+        "org": "SecOps Group"
+    },
+    "eCPPT": {
+        "full_name": "eLearnSecurity Certified Professional Penetration Tester",
+        "org": "INE/eLearnSecurity"
+    },
+    "eJPT": {
+        "full_name": "eLearnSecurity Junior Penetration Tester",
+        "org": "INE/eLearnSecurity"
+    },
+    "eWPT": {
+        "full_name": "eLearnSecurity Web Application Penetration Tester",
+        "org": "INE/eLearnSecurity"
+    },
+    "PNPT": {
+        "full_name": "Practical Network Penetration Tester",
+        "org": "TCM Security"
+    },
+    "BTL1": {
+        "full_name": "Blue Team Level 1",
+        "org": "Security Blue Team"
+    },
+    "BTL2": {
+        "full_name": "Blue Team Level 2",
+        "org": "Security Blue Team"
+    },
+    "AWS Certified Solutions Architect": {
+        "full_name": "AWS Certified Solutions Architect",
+        "org": "Amazon"
+    },
+    "AWS Certified Security": {
+        "full_name": "AWS Certified Security Specialty",
+        "org": "Amazon"
+    },
+    "AWS Certified Cloud Practitioner": {
+        "full_name": "AWS Certified Cloud Practitioner",
+        "org": "Amazon"
+    },
+    "Azure Security Engineer": {
+        "full_name": "Microsoft Certified: Azure Security Engineer Associate",
+        "org": "Microsoft"
+    },
+    "Azure Administrator": {
+        "full_name": "Microsoft Certified: Azure Administrator Associate",
+        "org": "Microsoft"
+    },
+    "Google Cloud Security": {
+        "full_name": "Google Cloud Professional Cloud Security Engineer",
+        "org": "Google"
+    }
+}

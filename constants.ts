@@ -9,9 +9,12 @@ export const TIME_RANGE_OPTIONS: TimeRangeOption[] = [
 ];
 
 export const JOB_TITLE_EXAMPLES: string[] = [
+  "Cybersecurity Analyst",
+  "Security Engineer",
   "Software Engineer",
   "Frontend Developer",
   "Data Scientist",
   "Product Manager",
-  "UX Designer"
+  "UX Designer",
+  "SOC Analyst",
 ];
