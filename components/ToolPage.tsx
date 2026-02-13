@@ -14,6 +14,10 @@ import ScanDetailModal from './ScanDetailModal';
 import { useJobScan } from '../contexts/JobScanContext';
 import type { ScanHistoryEntry } from '../types';
 
+const TIME_RANGE_SHORT: Record<string, string> = {
+  '1d': '24h', '3d': '3d', '7d': '7d', '14d': '14d', '30d': '30d',
+};
+
 // ── History Section ─────────────────────────────────────────────────────────
 const HistorySection: React.FC<{
   history: ScanHistoryEntry[];
@@ -92,7 +96,14 @@ const HistorySection: React.FC<{
                   </Td>
                   <Td px={2} py={2.5} verticalAlign="top">
                     <Text fontSize="sm" color={text} fontWeight="medium">{entry.job_title}</Text>
-                    {entry.location && <Text fontSize="xs" color={muted}>{entry.location}</Text>}
+                    <HStack spacing={1.5}>
+                      {entry.location && <Text fontSize="xs" color={muted}>{entry.location}</Text>}
+                      {entry.time_range && (
+                        <Tag size="sm" variant="subtle" colorScheme="gray" fontSize="2xs">
+                          {TIME_RANGE_SHORT[entry.time_range] || entry.time_range}
+                        </Tag>
+                      )}
+                    </HStack>
                   </Td>
                   <Td px={2} py={2.5} isNumeric verticalAlign="top">
                     <Text fontSize="sm" color={text} fontWeight="medium">

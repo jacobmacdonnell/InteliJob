@@ -7,13 +7,13 @@ import {
 import { FaCertificate } from 'react-icons/fa';
 import type { ScanHistoryEntry, CertItem } from '../types';
 
-// Human-readable time range labels
+// Labels match the frontend values stored in the DB (1d, 3d, etc.)
 const TIME_RANGE_LABELS: Record<string, string> = {
-    'today': 'Today',
-    '3days': 'Past 3 Days',
-    'week': 'Past Week',
-    'month': 'Past Month',
-    'all': 'All Time',
+    '1d': 'Past 24 Hours',
+    '3d': 'Past 3 Days',
+    '7d': 'Past Week',
+    '14d': 'Past 14 Days',
+    '30d': 'Past 30 Days',
 };
 
 interface ScanDetailModalProps {

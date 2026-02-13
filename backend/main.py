@@ -412,7 +412,8 @@ async def root():
 async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
     """Analyze job postings for certification demand."""
     try:
-        date_map = {"1d": "today", "3d": "3days", "7d": "week", "14d": "month", "30d": "month"}
+        # JSearch supports: today, 3days, week, month, all
+        date_map = {"1d": "today", "3d": "3days", "7d": "week", "14d": "month", "30d": "all"}
         date_posted = date_map.get(payload.time_range, "today")
 
         # Multi-query expansion

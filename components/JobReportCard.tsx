@@ -211,7 +211,7 @@ export const JobReportCard: React.FC<{ data: ReportData }> = ({ data }) => {
 
   const totalJobs = data.metadata?.jobs_with_descriptions || data.metadata?.total_jobs_found || 0;
   const sorted = useMemo(
-    () => data.certifications?.items ? [...data.certifications.items].sort((a, b) => b.count - a.count) : [],
+    () => data.certifications?.items ? [...data.certifications.items].sort((a, b) => b.percentage - a.percentage) : [],
     [data.certifications?.items]
   );
   const visible = showAll ? sorted : sorted.slice(0, 7);
