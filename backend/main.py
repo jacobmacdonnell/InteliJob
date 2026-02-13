@@ -2,9 +2,11 @@ import os
 import re
 import json
 import sqlite3
+import asyncio
 from datetime import datetime, timezone
 from typing import List, Dict, Optional, Any
 from pathlib import Path
+from collections import Counter
 import httpx
 from fastapi import FastAPI, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -54,6 +56,73 @@ class JobAnalysisResponse(BaseModel):
 # ── Config ───────────────────────────────────────────────────────────────────
 JSEARCH_API_URL = settings.jsearch_api_url
 RAPIDAPI_KEY = settings.rapidapi_key
+
+# ── Role Families (multi-query expansion) ────────────────────────────────────
+# When a user searches one title, we also query related titles to get broader coverage.
+ROLE_FAMILIES: Dict[str, List[str]] = {
+    "Cybersecurity Analyst": [
+        "Cybersecurity Analyst",
+        "Security Analyst",
+        "Information Security Analyst",
+        "Cyber Security Analyst",
+    ],
+    "Security Engineer": [
+        "Security Engineer",
+        "Cybersecurity Engineer",
+        "Information Security Engineer",
+    ],
+    "SOC Analyst": [
+        "SOC Analyst",
+        "SOC 1 Analyst",
+        "SOC 2 Analyst",
+        "SOC 3 Analyst",
+        "SOC Level 1 Analyst",
+        "SOC Level 2 Analyst",
+        "SOC Level 3 Analyst",
+        "Security Operations Center Analyst",
+        "Security Operations Analyst",
+    ],
+    "Penetration Tester": [
+        "Penetration Tester",
+        "Junior Penetration Tester",
+        "Jr Penetration Tester",
+        "Ethical Hacker",
+        "Offensive Security",
+    ],
+    "Cloud Security Engineer": [
+        "Cloud Security Engineer",
+        "Cloud Security Architect",
+        "Cloud Security",
+        "Cloud Security Analyst",
+    ],
+    "GRC Analyst": [
+        "GRC Analyst",
+        "Governance Risk Compliance",
+        "IT Risk Analyst",
+        "IT Compliance Analyst",
+    ],
+    "Security Architect": [
+        "Security Architect",
+        "Cybersecurity Architect",
+        "Information Security Architect",
+    ],
+    "Threat Analyst": [
+        "Threat Analyst",
+        "Threat Intelligence Analyst",
+        "Cyber Threat Analyst",
+    ],
+}
+
+def get_search_queries(job_title: str) -> List[str]:
+    """Get expanded search queries for a given job title."""
+    # Check if it matches a known role family (case-insensitive)
+    title_lower = job_title.lower().strip()
+    for family_key, queries in ROLE_FAMILIES.items():
+        if title_lower == family_key.lower():
+            return queries
+    # Unknown title: just search as-is
+    return [job_title]
+
 
 # ── Cert Dictionary ──────────────────────────────────────────────────────────
 CERT_DICT_PATH = Path(__file__).parent / "certs.json"
@@ -145,31 +214,56 @@ def get_scan_history(limit: int = 50) -> List[Dict]:
 
 # ── Job Fetching ─────────────────────────────────────────────────────────────
 
-async def fetch_jobs(job_title: str, location: str = None, date_posted: str = "today") -> List[Dict]:
-    """Fetch job postings from JSearch API."""
-    if not RAPIDAPI_KEY:
-        raise HTTPException(status_code=500, detail="RAPIDAPI_KEY not configured.")
-
+async def fetch_jobs_single(client: httpx.AsyncClient, query: str, location: str = None, date_posted: str = "today") -> List[Dict]:
+    """Fetch job postings for a single query."""
     headers = {
         "X-RapidAPI-Key": RAPIDAPI_KEY,
         "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
     }
     params = {
-        "query": f"{job_title} in {location}" if location else job_title,
+        "query": f"{query} in {location}" if location else query,
         "page": "1",
         "num_pages": "10",
         "date_posted": date_posted,
     }
+    try:
+        response = await client.get(JSEARCH_API_URL, headers=headers, params=params)
+        response.raise_for_status()
+        return response.json().get("data", [])
+    except Exception as e:
+        print(f"Query '{query}' failed: {e}")
+        return []
+
+async def fetch_jobs_expanded(job_title: str, location: str = None, date_posted: str = "today") -> tuple[List[Dict], List[str]]:
+    """Fetch jobs using expanded queries, dedup, and return (jobs, queries_used)."""
+    if not RAPIDAPI_KEY:
+        raise HTTPException(status_code=500, detail="RAPIDAPI_KEY not configured.")
+
+    queries = get_search_queries(job_title)
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.get(JSEARCH_API_URL, headers=headers, params=params)
-            response.raise_for_status()
-            return response.json().get("data", [])
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=408, detail="JSearch API timeout")
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail=f"JSearch API error: {e.response.text}")
+            # Run all queries in parallel
+            tasks = [fetch_jobs_single(client, q, location, date_posted) for q in queries]
+            results = await asyncio.gather(*tasks)
+
+        # Merge and deduplicate by job_id or (employer + title) combo
+        seen_ids = set()
+        all_jobs = []
+        for batch in results:
+            for job in batch:
+                job_id = job.get("job_id", "")
+                if not job_id:
+                    # Fallback dedup key
+                    job_id = f"{job.get('employer_name', '')}-{job.get('job_title', '')}"
+                if job_id not in seen_ids:
+                    seen_ids.add(job_id)
+                    all_jobs.append(job)
+
+        return all_jobs, queries
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching jobs: {e}")
 
@@ -194,7 +288,6 @@ def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: 
         if canonical in seen:
             continue
 
-        # Short abbreviations need word boundaries
         if len(search_term) <= 3:
             if re.search(r'\b' + re.escape(search_term) + r'\b', text_lower):
                 seen.add(canonical)
@@ -224,7 +317,7 @@ def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: 
 # ── Ranking ──────────────────────────────────────────────────────────────────
 
 def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict]:
-    """Rank certs by % of jobs mentioning them. Preserves full_name/org."""
+    """Rank certs by % of jobs mentioning them."""
     if not items:
         return []
 
@@ -252,7 +345,6 @@ def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict
 
     ranked = []
     for g in sorted_groups:
-        # Deduplicate sources
         seen = set()
         unique_sources = []
         for s in g["sources"]:
@@ -274,6 +366,45 @@ def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict
     return ranked
 
 
+# ── Insights ─────────────────────────────────────────────────────────────────
+
+def compute_title_distribution(jobs: List[Dict]) -> List[Dict]:
+    """Count actual job title variations in results."""
+    titles = Counter()
+    for job in jobs:
+        raw = job.get("job_title", "Unknown")
+        titles[raw] += 1
+
+    total = sum(titles.values())
+    dist = []
+    for title, count in titles.most_common(8):
+        dist.append({
+            "title": title,
+            "count": count,
+            "percentage": round((count / total) * 100, 1) if total > 0 else 0,
+        })
+    return dist
+
+def compute_cert_pairs(all_certs_per_job: List[List[str]], total_jobs: int) -> List[Dict]:
+    """Find the most common cert pairs across jobs."""
+    pair_counter = Counter()
+    for job_certs in all_certs_per_job:
+        unique = sorted(set(job_certs))
+        for i in range(len(unique)):
+            for j in range(i + 1, len(unique)):
+                pair_counter[(unique[i], unique[j])] += 1
+
+    pairs = []
+    for (a, b), count in pair_counter.most_common(5):
+        if count >= 2:  # Only show pairs that appear in 2+ jobs
+            pairs.append({
+                "certs": [a, b],
+                "count": count,
+                "percentage": round((count / total_jobs) * 100, 1) if total_jobs > 0 else 0,
+            })
+    return pairs
+
+
 # ── API Routes ───────────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -290,13 +421,15 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
         date_map = {"1d": "today", "3d": "3days", "7d": "week", "14d": "month", "30d": "month"}
         date_posted = date_map.get(payload.time_range, "today")
 
-        jobs = await fetch_jobs(payload.job_title, payload.location, date_posted)
+        # Multi-query expansion
+        jobs, queries_used = await fetch_jobs_expanded(payload.job_title, payload.location, date_posted)
 
         if not jobs:
             return JobAnalysisResponse(success=False, message="No jobs found", jobs_analyzed=0)
 
         # Extract certs from all job descriptions
         all_certs = []
+        certs_per_job: List[List[str]] = []  # For pair analysis
         jobs_with_desc = 0
 
         for job in jobs:
@@ -310,10 +443,16 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
             company = job.get("company_name", job.get("employer_name", "Unknown"))
             url = job.get("job_apply_link", job.get("job_url"))
 
-            all_certs.extend(extract_certs(cleaned, title, company, url))
+            job_certs = extract_certs(cleaned, title, company, url)
+            all_certs.extend(job_certs)
+            certs_per_job.append([c["name"] for c in job_certs])
 
         total = jobs_with_desc if jobs_with_desc > 0 else len(jobs)
         ranked = rank_certs(all_certs, total, 15)
+
+        # Compute insights
+        title_dist = compute_title_distribution(jobs)
+        cert_pairs = compute_cert_pairs(certs_per_job, total)
 
         # Save to SQLite
         save_scan(
@@ -332,6 +471,9 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
                 "certifications": {"title": "Certification Demand", "items": ranked},
                 "total_jobs_found": len(jobs),
                 "jobs_with_descriptions": jobs_with_desc,
+                "queries_used": queries_used,
+                "title_distribution": title_dist,
+                "cert_pairs": cert_pairs,
                 "search_criteria": {
                     "job_title": payload.job_title,
                     "location": payload.location,
@@ -369,6 +511,7 @@ async def health_check():
         "environment": ENVIRONMENT,
         "rapidapi_configured": bool(RAPIDAPI_KEY),
         "certs_loaded": len(CERT_DICTIONARY),
+        "role_families": len(ROLE_FAMILIES),
         "version": "3.0.0",
     }
 

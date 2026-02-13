@@ -5,11 +5,11 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 60000,
+  timeout: 120000, // 2 min for multi-query
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ── Fetch Report (cert-only) ────────────────────────────────────────────────
+// ── Fetch Report ────────────────────────────────────────────────────────────
 
 export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> => {
   try {
@@ -19,7 +19,6 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
       time_range: criteria.time_range || '1d',
     });
 
-    // Rate limit warning
     const remaining = response.headers['x-ratelimit-remaining'];
     if (remaining !== undefined && parseInt(remaining) <= 5) {
       window.dispatchEvent(new CustomEvent('rateLimitWarning', {
@@ -44,8 +43,11 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
       metadata: {
         total_jobs_found: d.total_jobs_found,
         jobs_with_descriptions: d.jobs_with_descriptions,
+        queries_used: d.queries_used || [],
         search_criteria: d.search_criteria,
       },
+      title_distribution: d.title_distribution || [],
+      cert_pairs: d.cert_pairs || [],
     };
   } catch (error: any) {
     if (axios.isAxiosError(error)) {

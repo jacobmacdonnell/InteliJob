@@ -19,6 +19,18 @@ export interface CertItem {
   sources?: JobSource[];
 }
 
+export interface TitleDistEntry {
+  title: string;
+  count: number;
+  percentage: number;
+}
+
+export interface CertPair {
+  certs: [string, string];
+  count: number;
+  percentage: number;
+}
+
 export interface ReportData {
   certifications: {
     title: string;
@@ -27,12 +39,15 @@ export interface ReportData {
   metadata: {
     total_jobs_found: number;
     jobs_with_descriptions: number;
+    queries_used: string[];
     search_criteria: {
       job_title: string;
       location?: string;
       time_range?: string;
     };
   };
+  title_distribution: TitleDistEntry[];
+  cert_pairs: CertPair[];
 }
 
 export interface ScanHistoryEntry {
