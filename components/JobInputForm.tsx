@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   FormControl, FormLabel, Input, Select, Button, VStack,
-  Box, HStack, useColorModeValue, Wrap, WrapItem, Tag,
+  Box, HStack, useColorModeValue, Wrap, WrapItem, Tag, Text,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import type { JobCriteria } from '../types';
@@ -21,11 +21,16 @@ const POPULAR_SEARCHES = [
   'GRC Analyst',
 ];
 
+const TARGET_PATH_OPTIONS = ['General Security', 'SOC', 'Cloud Security', 'GRC', 'Offensive Security'];
+
 export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading }) => {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [timeRange, setTimeRange] = useState(TIME_RANGE_OPTIONS[0].value);
+  const [targetPath, setTargetPath] = useState('General Security');
+  const [ownedCertsInput, setOwnedCertsInput] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
 
   const labelColor = useColorModeValue('gray.600', 'gray.400');
   const inputBg = useColorModeValue('white', 'gray.700');
@@ -34,6 +39,7 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
   const placeholderColor = useColorModeValue('gray.400', 'gray.500');
   const optionBg = useColorModeValue('#ffffff', '#2D3748');
   const optionColor = useColorModeValue('#1A202C', '#F7FAFC');
+  const muted = useColorModeValue('gray.500', 'gray.400');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,21 +48,49 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const saved = localStorage.getItem('rateLimitRemaining');
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!Number.isNaN(parsed)) setRemainingRequests(parsed);
+    }
+
+    const handleRateUpdate = (event: Event) => {
+      const e = event as CustomEvent<{ remaining: number }>;
+      if (typeof e.detail?.remaining === 'number') setRemainingRequests(e.detail.remaining);
+    };
+
+    window.addEventListener('rateLimitUpdate', handleRateUpdate as EventListener);
+    window.addEventListener('rateLimitWarning', handleRateUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('rateLimitUpdate', handleRateUpdate as EventListener);
+      window.removeEventListener('rateLimitWarning', handleRateUpdate as EventListener);
+    };
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSubmit({ job_title: title.trim(), location: location.trim() || undefined, time_range: timeRange });
+    const ownedCerts = ownedCertsInput
+      .split(',')
+      .map(c => c.trim())
+      .filter(Boolean);
+
+    onSubmit({
+      job_title: title.trim(),
+      location: location.trim() || undefined,
+      time_range: timeRange,
+      target_path: targetPath,
+      owned_certs: ownedCerts,
+    });
   };
 
-  // Quick search only fills the input — does NOT auto-submit
-  const handleQuickFill = (term: string) => {
-    setTitle(term);
-  };
+  const handleQuickFill = (term: string) => setTitle(term);
 
   return (
     <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={4} align="stretch">
-        {/* Job Title */}
         <FormControl isRequired>
           <FormLabel color={labelColor} fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
             Job Title
@@ -72,7 +106,6 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
           />
         </FormControl>
 
-        {/* Quick fill tags */}
         <Wrap spacing={2}>
           {POPULAR_SEARCHES.map((search) => (
             <WrapItem key={search}>
@@ -89,8 +122,7 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
           ))}
         </Wrap>
 
-        {/* Location + Time Range row */}
-        <HStack spacing={3}>
+        <HStack spacing={3} align="start">
           <FormControl flex={1}>
             <FormLabel color={labelColor} fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
               Location
@@ -126,7 +158,38 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
           </FormControl>
         </HStack>
 
-        {/* Submit */}
+        <HStack spacing={3} align="start">
+          <FormControl flex={1}>
+            <FormLabel color={labelColor} fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+              Target Path
+            </FormLabel>
+            <Select value={targetPath} onChange={(e) => setTargetPath(e.target.value)} bg={inputBg} color={inputText} borderColor={borderColor}>
+              {TARGET_PATH_OPTIONS.map(path => (
+                <option key={path} value={path} style={{ backgroundColor: optionBg, color: optionColor }}>{path}</option>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl flex={2}>
+            <FormLabel color={labelColor} fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+              Certs You Already Have
+            </FormLabel>
+            <Input
+              value={ownedCertsInput}
+              onChange={(e) => setOwnedCertsInput(e.target.value)}
+              placeholder="Optional — Security+, AZ-500"
+              bg={inputBg} color={inputText} borderColor={borderColor}
+              _placeholder={{ color: placeholderColor }}
+              size="md" fontSize="sm" borderRadius="md"
+            />
+          </FormControl>
+        </HStack>
+
+        {remainingRequests !== null && (
+          <Text fontSize="xs" color={muted}>
+            API quota remaining today: <strong>{remainingRequests}</strong>
+          </Text>
+        )}
+
         <Button
           type="submit" colorScheme="teal" size="lg"
           isLoading={isLoading} loadingText="Scanning ~100 jobs..."

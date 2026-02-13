@@ -10,6 +10,7 @@ interface JobScanContextType {
   historyLoading: boolean;
   stats: AggregateStats | null;
   statsLoading: boolean;
+  lastCriteria: JobCriteria | null;
   handleScan: (criteria: JobCriteria) => Promise<void>;
   loadHistory: () => Promise<void>;
   loadStats: () => Promise<void>;
@@ -25,6 +26,7 @@ export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [historyLoading, setHistoryLoading] = useState(false);
   const [stats, setStats] = useState<AggregateStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [lastCriteria, setLastCriteria] = useState<JobCriteria | null>(null);
 
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
@@ -54,10 +56,10 @@ export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children })
     setIsLoading(true);
     setError(null);
     setReportData(null);
+    setLastCriteria(criteria);
     try {
       const data = await fetchReport(criteria);
       setReportData(data);
-      // Refresh history and stats after new scan
       loadHistory();
       loadStats();
     } catch (err: any) {
@@ -68,7 +70,6 @@ export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [loadHistory, loadStats]);
 
-  // Load on mount
   useEffect(() => {
     loadHistory();
     loadStats();
@@ -79,6 +80,7 @@ export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children })
       reportData, isLoading, error,
       history, historyLoading,
       stats, statsLoading,
+      lastCriteria,
       handleScan, loadHistory, loadStats,
     }}>
       {children}

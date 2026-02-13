@@ -144,7 +144,7 @@ const HistorySection: React.FC<{
 
 // ── Main Tool Page ──────────────────────────────────────────────────────────
 const ToolPage: React.FC = () => {
-  const { reportData, isLoading, error, history, historyLoading, handleScan } = useJobScan();
+  const { reportData, isLoading, error, history, historyLoading, handleScan, lastCriteria } = useJobScan();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedScan, setSelectedScan] = useState<ScanHistoryEntry | null>(null);
 
@@ -184,7 +184,7 @@ const ToolPage: React.FC = () => {
           {/* Results */}
           {reportData && !isLoading && (
             <Box bg={cardBg} p={5} borderRadius="xl" borderWidth="1px" borderColor={cardBorder} boxShadow="sm">
-              <JobReportCard data={reportData} />
+              <JobReportCard data={reportData} criteria={lastCriteria} />
             </Box>
           )}
 

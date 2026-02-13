@@ -17,13 +17,18 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
       job_title: criteria.job_title,
       location: criteria.location || null,
       time_range: criteria.time_range || '1d',
+      target_path: criteria.target_path || null,
+      owned_certs: criteria.owned_certs || [],
     });
 
-    const remaining = response.headers['x-ratelimit-remaining'];
-    if (remaining !== undefined && parseInt(remaining) <= 5) {
-      window.dispatchEvent(new CustomEvent('rateLimitWarning', {
-        detail: { remaining: parseInt(remaining) }
-      }));
+    const remainingHeader = response.headers['x-ratelimit-remaining'];
+    const remaining = remainingHeader !== undefined ? parseInt(remainingHeader, 10) : undefined;
+    if (remaining !== undefined && !Number.isNaN(remaining)) {
+      localStorage.setItem('rateLimitRemaining', String(remaining));
+      window.dispatchEvent(new CustomEvent('rateLimitUpdate', { detail: { remaining } }));
+      if (remaining <= 5) {
+        window.dispatchEvent(new CustomEvent('rateLimitWarning', { detail: { remaining } }));
+      }
     }
 
     if (!response.data.success) {
@@ -44,6 +49,7 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
         total_jobs_found: d.total_jobs_found,
         jobs_with_descriptions: d.jobs_with_descriptions,
         queries_used: d.queries_used || [],
+        rate_limit_remaining: remaining,
         search_criteria: d.search_criteria,
       },
       title_distribution: d.title_distribution || [],

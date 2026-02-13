@@ -2,6 +2,8 @@ export interface JobCriteria {
   job_title: string;
   location?: string;
   time_range?: string;
+  target_path?: string;
+  owned_certs?: string[];
 }
 
 export interface JobSource {
@@ -40,6 +42,7 @@ export interface ReportData {
     total_jobs_found: number;
     jobs_with_descriptions: number;
     queries_used: string[];
+    rate_limit_remaining?: number;
     search_criteria: {
       job_title: string;
       location?: string;
@@ -75,7 +78,7 @@ export interface TrendDataPoint {
   date: string;
   job_title: string;
   jobs: number;
-  [certName: string]: string | number; // dynamic cert % columns
+  [certName: string]: string | number;
 }
 
 export interface AggregateStats {
