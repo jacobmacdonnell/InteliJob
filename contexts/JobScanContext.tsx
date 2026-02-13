@@ -1,6 +1,6 @@
 import React, { createContext, useState, useCallback, useContext, useEffect, ReactNode } from 'react';
-import { fetchReport, fetchHistory } from '../services/JobScanService';
-import type { JobCriteria, ReportData, ScanHistoryEntry } from '../types';
+import { fetchReport, fetchHistory, fetchStats } from '../services/JobScanService';
+import type { JobCriteria, ReportData, ScanHistoryEntry, AggregateStats } from '../types';
 
 interface JobScanContextType {
   reportData: ReportData | null;
@@ -8,8 +8,11 @@ interface JobScanContextType {
   error: string | null;
   history: ScanHistoryEntry[];
   historyLoading: boolean;
+  stats: AggregateStats | null;
+  statsLoading: boolean;
   handleScan: (criteria: JobCriteria) => Promise<void>;
   loadHistory: () => Promise<void>;
+  loadStats: () => Promise<void>;
 }
 
 const JobScanContext = createContext<JobScanContextType | undefined>(undefined);
@@ -20,6 +23,8 @@ export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<ScanHistoryEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [stats, setStats] = useState<AggregateStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
@@ -33,6 +38,18 @@ export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, []);
 
+  const loadStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const data = await fetchStats();
+      setStats(data);
+    } catch {
+      console.error('Failed to load stats');
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
   const handleScan = useCallback(async (criteria: JobCriteria) => {
     setIsLoading(true);
     setError(null);
@@ -40,23 +57,30 @@ export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children })
     try {
       const data = await fetchReport(criteria);
       setReportData(data);
-      // Refresh history after new scan
+      // Refresh history and stats after new scan
       loadHistory();
+      loadStats();
     } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       setReportData(null);
     } finally {
       setIsLoading(false);
     }
-  }, [loadHistory]);
+  }, [loadHistory, loadStats]);
 
-  // Load history on mount
+  // Load on mount
   useEffect(() => {
     loadHistory();
-  }, [loadHistory]);
+    loadStats();
+  }, [loadHistory, loadStats]);
 
   return (
-    <JobScanContext.Provider value={{ reportData, isLoading, error, history, historyLoading, handleScan, loadHistory }}>
+    <JobScanContext.Provider value={{
+      reportData, isLoading, error,
+      history, historyLoading,
+      stats, statsLoading,
+      handleScan, loadHistory, loadStats,
+    }}>
       {children}
     </JobScanContext.Provider>
   );

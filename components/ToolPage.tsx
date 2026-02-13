@@ -10,6 +10,7 @@ import { JobReportCard } from './JobReportCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import { RateLimitNotification } from './RateLimitNotification';
+import TrendsDashboard from './TrendsDashboard';
 import { useJobScan } from '../contexts/JobScanContext';
 import type { ScanHistoryEntry } from '../types';
 
@@ -27,7 +28,6 @@ const HistorySection: React.FC<{ history: ScanHistoryEntry[]; loading: boolean }
   }
   if (history.length === 0) return null;
 
-  // Group by date
   const formatDate = (ts: string) => {
     const d = new Date(ts);
     const today = new Date();
@@ -48,7 +48,7 @@ const HistorySection: React.FC<{ history: ScanHistoryEntry[]; loading: boolean }
       <HStack spacing={2} mb={3}>
         <Icon as={FaHistory} color={titleColor} w={3.5} h={3.5} />
         <Heading size="xs" color={titleColor} textTransform="uppercase" letterSpacing="wider">
-          Scan History
+          Recent Scans
         </Heading>
         <Badge colorScheme="gray" fontSize="2xs" variant="subtle">{history.length}</Badge>
       </HStack>
@@ -64,8 +64,8 @@ const HistorySection: React.FC<{ history: ScanHistoryEntry[]; loading: boolean }
             </Tr>
           </Thead>
           <Tbody>
-            {history.map((entry) => {
-              const topCerts = entry.cert_data
+            {history.slice(0, 10).map((entry) => {
+              const topCerts = [...entry.cert_data]
                 .sort((a, b) => b.percentage - a.percentage)
                 .slice(0, 3);
 
@@ -113,7 +113,7 @@ const HistorySection: React.FC<{ history: ScanHistoryEntry[]; loading: boolean }
 
 // ── Main Tool Page ──────────────────────────────────────────────────────────
 const ToolPage: React.FC = () => {
-  const { reportData, isLoading, error, history, historyLoading, handleScan } = useJobScan();
+  const { reportData, isLoading, error, history, historyLoading, stats, statsLoading, handleScan } = useJobScan();
 
   const pageBg = useColorModeValue('gray.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.800');
@@ -142,7 +142,7 @@ const ToolPage: React.FC = () => {
             <Flex justify="center" py={8}>
               <VStack spacing={3}>
                 <LoadingSpinner />
-                <Text fontSize="sm" color="gray.400">Scanning ~100 job postings...</Text>
+                <Text fontSize="sm" color="gray.400">Scanning jobs across related titles...</Text>
               </VStack>
             </Flex>
           )}
@@ -158,7 +158,12 @@ const ToolPage: React.FC = () => {
             </Box>
           )}
 
-          {/* History */}
+          {/* All-Time Stats & Trends */}
+          {!isLoading && (
+            <TrendsDashboard stats={stats} loading={statsLoading} />
+          )}
+
+          {/* Recent Scan History */}
           {!isLoading && (
             <HistorySection history={history} loading={historyLoading} />
           )}

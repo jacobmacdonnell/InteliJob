@@ -73,12 +73,6 @@ ROLE_FAMILIES: Dict[str, List[str]] = {
     ],
     "SOC Analyst": [
         "SOC Analyst",
-        "SOC 1 Analyst",
-        "SOC 2 Analyst",
-        "SOC 3 Analyst",
-        "SOC Level 1 Analyst",
-        "SOC Level 2 Analyst",
-        "SOC Level 3 Analyst",
         "Security Operations Center Analyst",
         "Security Operations Analyst",
     ],
@@ -503,6 +497,85 @@ async def scan_history(limit: int = 50):
         raise HTTPException(status_code=500, detail=f"Error loading history: {e}")
 
 
+@app.get("/stats")
+@limiter.exempt
+async def aggregate_stats():
+    """Aggregate all scan data into all-time stats and trends."""
+    try:
+        conn = _get_db()
+        rows = conn.execute("SELECT * FROM scans ORDER BY timestamp ASC").fetchall()
+        conn.close()
+
+        if not rows:
+            return {"stats": None}
+
+        total_scans = len(rows)
+        total_jobs = sum(row["total_jobs"] for row in rows)
+        total_jobs_desc = sum(row["jobs_with_descriptions"] for row in rows)
+
+        # Aggregate cert counts across ALL scans
+        cert_totals: Dict[str, Dict] = {}
+        # Track per-scan trends for each cert
+        trend_data: List[Dict] = []
+
+        for row in rows:
+            certs = json.loads(row["cert_data"])
+            scan_jobs = row["jobs_with_descriptions"] or row["total_jobs"]
+            ts = row["timestamp"][:10]  # date only
+            scan_entry = {"date": ts, "job_title": row["job_title"], "jobs": scan_jobs}
+
+            for cert in certs:
+                name = cert["name"]
+                if name not in cert_totals:
+                    cert_totals[name] = {
+                        "name": name,
+                        "full_name": cert.get("full_name", name),
+                        "org": cert.get("org", ""),
+                        "total_mentions": 0,
+                        "scans_appeared": 0,
+                        "percentages": [],
+                    }
+                cert_totals[name]["total_mentions"] += cert.get("count", 0)
+                cert_totals[name]["scans_appeared"] += 1
+                cert_totals[name]["percentages"].append(cert.get("percentage", 0))
+                scan_entry[name] = cert.get("percentage", 0)
+
+            trend_data.append(scan_entry)
+
+        # Build all-time rankings
+        all_time = []
+        for ct in cert_totals.values():
+            avg_pct = round(sum(ct["percentages"]) / len(ct["percentages"]), 1) if ct["percentages"] else 0
+            all_time.append({
+                "name": ct["name"],
+                "full_name": ct["full_name"],
+                "org": ct["org"],
+                "total_mentions": ct["total_mentions"],
+                "scans_appeared": ct["scans_appeared"],
+                "avg_percentage": avg_pct,
+                "latest_percentage": ct["percentages"][-1] if ct["percentages"] else 0,
+            })
+        all_time.sort(key=lambda x: x["avg_percentage"], reverse=True)
+
+        # Top certs for trend tracking (the top 8 by avg %)
+        top_cert_names = [c["name"] for c in all_time[:8]]
+
+        return {
+            "stats": {
+                "total_scans": total_scans,
+                "total_jobs_scanned": total_jobs,
+                "total_jobs_with_descriptions": total_jobs_desc,
+                "first_scan": rows[0]["timestamp"],
+                "latest_scan": rows[-1]["timestamp"],
+                "all_time_certs": all_time[:15],
+                "trend_data": trend_data,
+                "top_cert_names": top_cert_names,
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error computing stats: {e}")
+
+
 @app.get("/health")
 @limiter.exempt
 async def health_check():
@@ -518,3 +591,4 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

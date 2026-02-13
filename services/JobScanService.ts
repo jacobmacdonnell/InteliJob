@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { JobCriteria, ReportData, ScanHistoryEntry } from '../types';
+import type { JobCriteria, ReportData, ScanHistoryEntry, AggregateStats } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -76,6 +76,18 @@ export const fetchHistory = async (): Promise<ScanHistoryEntry[]> => {
   } catch (error) {
     console.error('Failed to load history:', error);
     return [];
+  }
+};
+
+// ── Fetch Aggregate Stats ───────────────────────────────────────────────────
+
+export const fetchStats = async (): Promise<AggregateStats | null> => {
+  try {
+    const response = await api.get('/stats');
+    return response.data.stats || null;
+  } catch (error) {
+    console.error('Failed to load stats:', error);
+    return null;
   }
 };
 
