@@ -186,7 +186,7 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
 
         {remainingRequests !== null && (
           <Text fontSize="xs" color={muted}>
-            API quota remaining today: <strong>{remainingRequests}</strong>
+            API quota remaining in current limit window: <strong>{remainingRequests}</strong>
           </Text>
         )}
 
