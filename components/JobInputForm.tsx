@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FormControl, FormLabel, Input, Select, Button, VStack, Text,
+  FormControl, FormLabel, Input, Select, Button, VStack,
   Box, HStack, useColorModeValue, Wrap, WrapItem, Tag,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';

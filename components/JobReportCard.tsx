@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Box, Heading, Text, VStack, HStack, Link, Tag, Icon, Progress,
+  Box, Heading, Text, VStack, HStack, Link, Icon, Progress,
   useColorModeValue, Button, Flex, SimpleGrid, Stat, StatLabel,
   StatNumber, StatHelpText,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
-import { FaCertificate, FaBriefcase, FaChartBar } from 'react-icons/fa';
+import { FaCertificate } from 'react-icons/fa';
 import type { ReportData, CertItem } from '../types';
 
 // ── Stats Summary ───────────────────────────────────────────────────────────
