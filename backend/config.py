@@ -17,9 +17,20 @@ class Settings:
         self.rate_limit_default = os.getenv("RATE_LIMIT_DEFAULT", "100/minute")
         self.rate_limit_strategy = os.getenv("RATE_LIMIT_STRATEGY", "moving-window")
 
+        # Admin/auth for protected endpoints
+        self.admin_api_key = os.getenv("ADMIN_API_KEY")
+
+        # Scan retention limits
+        self.scan_retention_days = int(os.getenv("SCAN_RETENTION_DAYS", "0"))
+        self.max_scan_rows = int(os.getenv("MAX_SCAN_ROWS", "0"))
+
     def is_rapidapi_configured(self) -> bool:
         return bool(self.rapidapi_key and self.rapidapi_key not in (
             "your_rapidapi_key_here", "your_actual_rapidapi_key_here"
         ))
+
+    def is_production(self) -> bool:
+        """Whether the app is running in production mode."""
+        return self.environment.lower() == "production"
 
 settings = Settings()
