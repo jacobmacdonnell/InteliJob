@@ -8,9 +8,9 @@ from typing import List, Dict, Optional, Any, Literal
 from pathlib import Path
 from collections import Counter
 import httpx
-from fastapi import FastAPI, HTTPException, Request, Body
+from fastapi import FastAPI, HTTPException, Request, Body, Header
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -46,6 +46,8 @@ class JobSearchRequest(BaseModel):
     job_title: str
     location: Optional[str] = None
     time_range: Literal["1d", "3d", "7d", "14d", "30d"] = "1d"
+    target_path: Optional[str] = None
+    owned_certs: List[str] = Field(default_factory=list)
 
 class JobAnalysisResponse(BaseModel):
     success: bool
@@ -56,6 +58,15 @@ class JobAnalysisResponse(BaseModel):
 # ── Config ───────────────────────────────────────────────────────────────────
 JSEARCH_API_URL = settings.jsearch_api_url
 RAPIDAPI_KEY = settings.rapidapi_key
+
+
+def _require_admin_access(x_admin_key: Optional[str]) -> None:
+    """Require ADMIN_API_KEY for sensitive endpoints."""
+    expected = settings.admin_api_key
+    if not expected:
+        raise HTTPException(status_code=503, detail="Admin endpoints disabled: ADMIN_API_KEY not configured.")
+    if x_admin_key != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 # ── Role Families (multi-query expansion) ────────────────────────────────────
 # When a user searches one title, we also query related titles to get broader coverage.
@@ -248,9 +259,23 @@ def save_scan(job_title: str, location: Optional[str], time_range: str,
                 json.dumps(cert_items),
             ),
         )
+        _apply_scan_retention(conn)
         conn.commit()
     finally:
         conn.close()
+
+def _apply_scan_retention(conn: sqlite3.Connection) -> None:
+    """Prune old scan rows by age and by max-row limit."""
+    if settings.scan_retention_days > 0:
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=settings.scan_retention_days)).isoformat()
+        conn.execute("DELETE FROM scans WHERE timestamp < ?", (cutoff,))
+
+    if settings.max_scan_rows > 0:
+        conn.execute(
+            "DELETE FROM scans WHERE id NOT IN (SELECT id FROM scans ORDER BY timestamp DESC LIMIT ?)",
+            (settings.max_scan_rows,),
+        )
+
 
 def get_scan_history(limit: int = 50) -> List[Dict]:
     """Get recent scan history."""
@@ -349,30 +374,19 @@ def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: 
         if canonical in seen:
             continue
 
-        if len(search_term) <= 3:
-            if re.search(r'\b' + re.escape(search_term) + r'\b', text_lower):
-                seen.add(canonical)
-                certs.append({
-                    "name": canonical,
-                    "full_name": info.get("full_name", canonical),
-                    "org": info.get("org", ""),
-                    "source_job": f"{job_title} at {company}",
-                    "company": company,
-                    "job_url": job_url,
-                    "job_key": job_key or job_url or f"{job_title} at {company}",
-                })
-        else:
-            if search_term in text_lower:
-                seen.add(canonical)
-                certs.append({
-                    "name": canonical,
-                    "full_name": info.get("full_name", canonical),
-                    "org": info.get("org", ""),
-                    "source_job": f"{job_title} at {company}",
-                    "company": company,
-                    "job_url": job_url,
-                    "job_key": job_key or job_url or f"{job_title} at {company}",
-                })
+        escaped = re.escape(search_term).replace(r"\ ", r"\s+")
+        pattern = rf"(?<![a-z0-9]){escaped}(?![a-z0-9])"
+        if re.search(pattern, text_lower):
+            seen.add(canonical)
+            certs.append({
+                "name": canonical,
+                "full_name": info.get("full_name", canonical),
+                "org": info.get("org", ""),
+                "source_job": f"{job_title} at {company}",
+                "company": company,
+                "job_url": job_url,
+                "job_key": job_key or job_url or f"{job_title} at {company}",
+            })
 
     return certs
 
@@ -551,6 +565,8 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
                     "job_title": payload.job_title,
                     "location": payload.location,
                     "time_range": payload.time_range,
+                    "target_path": payload.target_path,
+                    "owned_certs": payload.owned_certs,
                 },
             },
             jobs_analyzed=len(jobs),
@@ -567,8 +583,9 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
 
 @app.get("/history")
 @limiter.exempt
-async def scan_history(limit: int = 50):
+async def scan_history(limit: int = 50, x_admin_key: Optional[str] = Header(default=None)):
     """Return saved scan history for trend tracking."""
+    _require_admin_access(x_admin_key)
     try:
         history = get_scan_history(limit)
         return {"history": history}
@@ -578,8 +595,9 @@ async def scan_history(limit: int = 50):
 
 @app.get("/stats")
 @limiter.exempt
-async def aggregate_stats():
+async def aggregate_stats(x_admin_key: Optional[str] = Header(default=None)):
     """Aggregate all scan data into all-time stats and trends."""
+    _require_admin_access(x_admin_key)
     try:
         conn = _get_db()
         rows = conn.execute("SELECT * FROM scans ORDER BY timestamp ASC").fetchall()

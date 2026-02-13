@@ -261,3 +261,123 @@ def test_analyze_rejects_invalid_time_range(client: TestClient) -> None:
     })
 
     assert response.status_code == 422
+
+
+def test_history_requires_admin_key(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(main.settings, 'admin_api_key', 'secret')
+
+    response = client.get('/history')
+
+    assert response.status_code == 401
+
+
+def test_stats_requires_admin_key(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(main.settings, 'admin_api_key', 'secret')
+
+    response = client.get('/stats')
+
+    assert response.status_code == 401
+
+
+def test_history_allows_valid_admin_key(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(main.settings, 'admin_api_key', 'secret')
+
+    response = client.get('/history', headers={'X-Admin-Key': 'secret'})
+
+    assert response.status_code == 200
+
+
+def test_analyze_echoes_personalization_fields(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def fake_fetch_jobs_expanded(job_title: str, location: str | None = None, date_posted: str = 'today'):
+        return ([{
+            'job_title': 'Cybersecurity Analyst',
+            'company_name': 'Acme Corp',
+            'job_description': 'Security+ required',
+            'job_url': 'https://example.com/job/1',
+        }], [job_title])
+
+    monkeypatch.setattr(main, 'fetch_jobs_expanded', fake_fetch_jobs_expanded)
+
+    response = client.post('/analyze-jobs', json={
+        'job_title': 'Cybersecurity Analyst',
+        'time_range': '1d',
+        'target_path': 'SOC',
+        'owned_certs': ['Security+'],
+    })
+
+    response.raise_for_status()
+    data = response.json()
+
+    assert data['data']['search_criteria']['target_path'] == 'SOC'
+    assert data['data']['search_criteria']['owned_certs'] == ['Security+']
+
+
+def test_extract_certs_avoids_embedded_substring_false_positive() -> None:
+    text = 'We value acissspb skills but no cert requirement listed.'
+
+    certs = main.extract_certs(text, 'Role', 'Acme')
+
+    assert all(item['name'] != 'CISSP' for item in certs)
+
+
+def test_save_scan_applies_retention_limits(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path = tmp_path / 'retention.db'
+    monkeypatch.setattr(main, 'DB_PATH', db_path)
+    monkeypatch.setattr(main.settings, 'scan_retention_days', 30)
+    monkeypatch.setattr(main.settings, 'max_scan_rows', 1)
+
+    conn = main._get_db()
+    conn.execute(
+        "INSERT INTO scans (timestamp, job_title, location, time_range, total_jobs, jobs_with_descriptions, cert_data) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            (datetime.now(timezone.utc) - timedelta(days=90)).isoformat(),
+            'Old Role',
+            None,
+            '30d',
+            1,
+            1,
+            '[]',
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    main.save_scan('New Role', None, '1d', 2, 2, [])
+
+    conn = main._get_db()
+    rows = conn.execute('SELECT job_title FROM scans ORDER BY timestamp DESC').fetchall()
+    conn.close()
+
+    assert len(rows) == 1
+    assert rows[0]['job_title'] == 'New Role'
+
+
+def test_save_scan_retention_can_be_disabled(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path = tmp_path / 'no-prune.db'
+    monkeypatch.setattr(main, 'DB_PATH', db_path)
+    monkeypatch.setattr(main.settings, 'scan_retention_days', 0)
+    monkeypatch.setattr(main.settings, 'max_scan_rows', 0)
+
+    conn = main._get_db()
+    conn.execute(
+        "INSERT INTO scans (timestamp, job_title, location, time_range, total_jobs, jobs_with_descriptions, cert_data) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            (datetime.now(timezone.utc) - timedelta(days=3650)).isoformat(),
+            'Very Old Role',
+            None,
+            '30d',
+            1,
+            1,
+            '[]',
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    main.save_scan('Newest Role', None, '1d', 2, 2, [])
+
+    conn = main._get_db()
+    rows = conn.execute('SELECT job_title FROM scans ORDER BY timestamp DESC').fetchall()
+    conn.close()
+
+    assert [row['job_title'] for row in rows] == ['Newest Role', 'Very Old Role']
