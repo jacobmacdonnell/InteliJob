@@ -14,6 +14,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
   const activeBg = useColorModeValue('teal.50', 'rgba(49, 151, 149, 0.15)');
   const activeColor = useColorModeValue('teal.700', 'teal.300');
   const inactiveColor = useColorModeValue('gray.500', 'gray.400');
+  const hoverBg = useColorModeValue('gray.100', 'gray.700');
 
   return (
     <Box as="header" bg={bg} borderBottomWidth="1px" borderColor={border} py={2.5} px={6}>
@@ -35,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
             bg={activeTab === 'scan' ? activeBg : 'transparent'}
             borderRadius="md"
             onClick={() => onTabChange('scan')}
-            _hover={{ bg: activeTab === 'scan' ? activeBg : useColorModeValue('gray.100', 'gray.700') }}
+            _hover={{ bg: activeTab === 'scan' ? activeBg : hoverBg }}
           >
             Scan
           </Button>
@@ -46,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange }) => {
             bg={activeTab === 'stats' ? activeBg : 'transparent'}
             borderRadius="md"
             onClick={() => onTabChange('stats')}
-            _hover={{ bg: activeTab === 'stats' ? activeBg : useColorModeValue('gray.100', 'gray.700') }}
+            _hover={{ bg: activeTab === 'stats' ? activeBg : hoverBg }}
           >
             Stats
           </Button>

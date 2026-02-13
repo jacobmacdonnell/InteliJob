@@ -32,9 +32,14 @@ echo  Press any key to stop everything...
 echo.
 pause >nul
 
-:: Kill both servers
+:: Kill both servers by window title
 echo  Shutting down...
 taskkill /fi "WINDOWTITLE eq InteliJob Backend*" /f >nul 2>&1
 taskkill /fi "WINDOWTITLE eq InteliJob Frontend*" /f >nul 2>&1
+
+:: Also kill by port to catch orphaned processes
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8000 ^| findstr LISTENING 2^>nul') do taskkill /pid %%a /f >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5173 ^| findstr LISTENING 2^>nul') do taskkill /pid %%a /f >nul 2>&1
+
 echo  Done.
 timeout /t 2 /nobreak >nul

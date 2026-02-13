@@ -1,6 +1,6 @@
 {
   "name": "intelijob",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Personal cert research tool — analyzes job postings to rank cybersecurity certifications by employer demand",
   "private": true,
   "type": "module",
@@ -27,6 +27,7 @@
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^5.1.4",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }
