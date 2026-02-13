@@ -1,284 +1,193 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Box,
-  Heading,
-  Text,
-  VStack,
-  HStack,
-  Link,
-  Tag,
-  Icon,
-  useColorModeValue,
-  Button,
-  Flex,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-  Badge,
+  Box, Heading, Text, VStack, HStack, Link, Tag, Icon, Progress,
+  useColorModeValue, Button, Flex, SimpleGrid, Stat, StatLabel,
+  StatNumber, StatHelpText,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
-import { FaCertificate } from 'react-icons/fa';
-import type { ReportData, ReportSection, ExtractedItem } from '../types';
+import { FaCertificate, FaBriefcase, FaChartBar } from 'react-icons/fa';
+import type { ReportData, CertItem } from '../types';
 
-interface JobReportCardProps {
-  data: ReportData | null;
-  error?: string | null;
-}
+// ── Stats Summary ───────────────────────────────────────────────────────────
+const StatsSummary: React.FC<{ data: ReportData }> = ({ data }) => {
+  const bg = useColorModeValue('white', 'gray.750');
+  const border = useColorModeValue('gray.100', 'gray.700');
+  const muted = useColorModeValue('gray.500', 'gray.400');
 
-// ── Cert Item Display (with full name + org) ────────────────────────────────
-const CertItemDisplay: React.FC<{ item: ExtractedItem; totalJobs: number }> = ({ item, totalJobs }) => {
-  const itemBg = useColorModeValue('white', 'gray.700');
-  const hoverBg = useColorModeValue('gray.50', 'gray.600');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const mutedColor = useColorModeValue('gray.500', 'gray.400');
-  const linkColor = useColorModeValue('blue.500', 'blue.300');
-  const percentColor = useColorModeValue('teal.600', 'teal.300');
-  const accentBorder = useColorModeValue('teal.400', 'teal.300');
-  const orgColor = useColorModeValue('gray.500', 'gray.400');
+  const totalJobs = data.metadata.jobs_with_descriptions || data.metadata.total_jobs_found;
+  const totalCerts = data.certifications.items.length;
+  const topCert = data.certifications.items[0];
+
+  return (
+    <SimpleGrid columns={{ base: 2, md: 3 }} spacing={3} mb={4}>
+      <Box bg={bg} p={4} borderRadius="lg" borderWidth="1px" borderColor={border}>
+        <Stat size="sm">
+          <StatLabel color={muted} fontSize="xs" textTransform="uppercase">Jobs Scanned</StatLabel>
+          <StatNumber fontSize="2xl">{totalJobs}</StatNumber>
+          <StatHelpText fontSize="xs" mb={0}>{data.metadata.search_criteria.time_range || '1d'} window</StatHelpText>
+        </Stat>
+      </Box>
+      <Box bg={bg} p={4} borderRadius="lg" borderWidth="1px" borderColor={border}>
+        <Stat size="sm">
+          <StatLabel color={muted} fontSize="xs" textTransform="uppercase">Certs Found</StatLabel>
+          <StatNumber fontSize="2xl">{totalCerts}</StatNumber>
+          <StatHelpText fontSize="xs" mb={0}>unique certifications</StatHelpText>
+        </Stat>
+      </Box>
+      <Box bg={bg} p={4} borderRadius="lg" borderWidth="1px" borderColor={border} display={{ base: 'none', md: 'block' }}>
+        <Stat size="sm">
+          <StatLabel color={muted} fontSize="xs" textTransform="uppercase">Most Requested</StatLabel>
+          <StatNumber fontSize="2xl">{topCert?.name || '—'}</StatNumber>
+          <StatHelpText fontSize="xs" mb={0}>{topCert ? `${topCert.percentage}% of jobs` : 'no data'}</StatHelpText>
+        </Stat>
+      </Box>
+    </SimpleGrid>
+  );
+};
+
+// ── Single Cert Row ─────────────────────────────────────────────────────────
+const CertRow: React.FC<{ item: CertItem; rank: number; totalJobs: number; maxPct: number }> = ({ item, rank, totalJobs, maxPct }) => {
+  const bg = useColorModeValue('white', 'gray.750');
+  const hoverBg = useColorModeValue('gray.50', 'gray.700');
+  const text = useColorModeValue('gray.800', 'gray.100');
+  const muted = useColorModeValue('gray.500', 'gray.400');
+  const link = useColorModeValue('blue.500', 'blue.300');
+  const pctColor = useColorModeValue('teal.600', 'teal.300');
+  const rankColor = useColorModeValue('gray.400', 'gray.500');
+  const [expanded, setExpanded] = useState(false);
+
+  const barPct = maxPct > 0 ? (item.percentage / maxPct) * 100 : 0;
 
   return (
     <Box
-      p={4}
-      bg={itemBg}
-      borderRadius="md"
-      boxShadow="sm"
-      _hover={{ bg: hoverBg }}
-      transition="all 0.2s"
-      borderLeftWidth="4px"
-      borderLeftColor={accentBorder}
+      bg={bg} borderRadius="md" overflow="hidden"
+      _hover={{ bg: hoverBg }} transition="all 0.15s"
+      cursor="pointer" onClick={() => setExpanded(!expanded)}
     >
-      <HStack justify="space-between" align="flex-start" mb={1}>
-        <Box flex={1}>
-          <HStack spacing={2} align="baseline">
-            <Text fontWeight="bold" fontSize="lg" color={textColor}>
-              {item.name}
-            </Text>
-            <Text fontSize="xl" fontWeight="bold" color={percentColor}>
+      <Box p={3}>
+        <HStack spacing={3} align="center">
+          {/* Rank */}
+          <Text fontSize="sm" fontWeight="bold" color={rankColor} w="24px" textAlign="right" flexShrink={0}>
+            {rank}
+          </Text>
+
+          {/* Main info */}
+          <Box flex={1} minW={0}>
+            <HStack spacing={2} align="baseline">
+              <Text fontWeight="bold" fontSize="md" color={text} noOfLines={1}>{item.name}</Text>
+              {item.org && (
+                <Text fontSize="xs" color={muted} flexShrink={0}>{item.org}</Text>
+              )}
+            </HStack>
+            {/* Progress bar */}
+            <Progress
+              value={barPct} size="xs" colorScheme="teal"
+              borderRadius="full" mt={1.5}
+              bg={useColorModeValue('gray.100', 'gray.600')}
+            />
+          </Box>
+
+          {/* Percentage + count */}
+          <VStack spacing={0} align="end" flexShrink={0}>
+            <Text fontSize="lg" fontWeight="bold" color={pctColor} lineHeight="1">
               {item.percentage}%
             </Text>
-          </HStack>
+            <Text fontSize="xs" color={muted}>
+              {item.count}/{totalJobs}
+            </Text>
+          </VStack>
+        </HStack>
+      </Box>
+
+      {/* Expanded: full name + source jobs */}
+      {expanded && (
+        <Box px={3} pb={3} pt={0} ml="36px">
           {item.full_name && (
-            <Text fontSize="sm" color={mutedColor} mt={0.5}>
+            <Text fontSize="xs" color={muted} mb={1}>
               {item.full_name}
-              {item.org && (
-                <Text as="span" color={orgColor}> — {item.org}</Text>
-              )}
             </Text>
           )}
-        </Box>
-        <Tag colorScheme="teal" size="sm" variant="solid" flexShrink={0}>
-          {item.count} / {totalJobs} jobs
-        </Tag>
-      </HStack>
-
-      {item.sources && item.sources.length > 0 && (
-        <Box mt={2} pl={1}>
-          <Text fontSize="xs" fontWeight="semibold" color={mutedColor} mb={1}>
-            Sample job posts:
-          </Text>
-          <VStack spacing={1} align="stretch">
-            {item.sources.slice(0, 3).map((source, i) => (
-              <HStack key={i} spacing={2}>
-                <Icon as={ExternalLinkIcon} color={linkColor} w={3} h={3} flexShrink={0} />
-                {source.job_url ? (
-                  <Link href={source.job_url} isExternal color={linkColor} fontSize="xs" _hover={{ textDecoration: 'underline' }}>
-                    {source.job} ({source.company})
-                  </Link>
-                ) : (
-                  <Text color={mutedColor} fontSize="xs">
-                    {source.job} ({source.company})
-                  </Text>
-                )}
-              </HStack>
-            ))}
-          </VStack>
+          {item.sources && item.sources.length > 0 && (
+            <VStack spacing={0.5} align="stretch">
+              {item.sources.slice(0, 3).map((source, i) => (
+                <HStack key={i} spacing={1.5}>
+                  <Icon as={ExternalLinkIcon} color={link} w={2.5} h={2.5} flexShrink={0} />
+                  {source.job_url ? (
+                    <Link
+                      href={source.job_url} isExternal color={link} fontSize="xs"
+                      _hover={{ textDecoration: 'underline' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {source.company}
+                    </Link>
+                  ) : (
+                    <Text color={muted} fontSize="xs">{source.company}</Text>
+                  )}
+                </HStack>
+              ))}
+            </VStack>
+          )}
         </Box>
       )}
     </Box>
   );
 };
 
-// ── Generic Section Display (for skills, experience, education) ─────────────
-const SecondarySection: React.FC<{ section: ReportSection }> = ({ section }) => {
-  const textColor = useColorModeValue('gray.700', 'gray.200');
-
-  if (!section?.items || section.items.length === 0) return null;
-
-  const sorted = [...section.items].sort((a, b) => b.count - a.count);
-
-  return (
-    <VStack spacing={1.5} align="stretch">
-      {sorted.slice(0, 8).map((item, index) => (
-        <HStack key={index} justify="space-between" px={2} py={1}>
-          <Text fontSize="sm" color={textColor} noOfLines={1}>
-            {item.name}
-          </Text>
-          <Tag size="sm" colorScheme="gray" variant="subtle">
-            {item.count} {item.count === 1 ? 'job' : 'jobs'}
-          </Tag>
-        </HStack>
-      ))}
-    </VStack>
-  );
-};
-
 // ── Main Report Card ────────────────────────────────────────────────────────
-export const JobReportCard: React.FC<JobReportCardProps> = ({ data, error }) => {
-  const [showAllCerts, setShowAllCerts] = useState(false);
-
-  const containerBg = useColorModeValue('gray.50', 'gray.800');
+export const JobReportCard: React.FC<{ data: ReportData }> = ({ data }) => {
+  const [showAll, setShowAll] = useState(false);
   const titleColor = useColorModeValue('gray.700', 'gray.200');
-  const mutedColor = useColorModeValue('gray.500', 'gray.400');
-  const certSectionBg = useColorModeValue('white', 'gray.750');
-  const certSectionBorder = useColorModeValue('gray.200', 'gray.600');
-  const accentColor = useColorModeValue('teal.500', 'teal.300');
-  const accordionBg = useColorModeValue('white', 'gray.750');
-  const accordionBorder = useColorModeValue('gray.200', 'gray.600');
+  const muted = useColorModeValue('gray.500', 'gray.400');
+  const sectionBg = useColorModeValue('gray.50', 'gray.800');
+  const accent = useColorModeValue('teal.500', 'teal.300');
 
-  if (error) {
-    return (
-      <Alert status="error" borderRadius="lg">
-        <AlertIcon />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (!data) {
-    return (
-      <Box textAlign="center" p={10} bg={containerBg}>
-        <Text fontSize="lg" color={mutedColor}>No report data to display.</Text>
-      </Box>
-    );
-  }
-
-  const certs = data.certifications;
   const totalJobs = data.metadata?.jobs_with_descriptions || data.metadata?.total_jobs_found || 0;
-  const sortedCerts = useMemo(() =>
-    certs?.items ? [...certs.items].sort((a, b) => b.count - a.count) : [],
-    [certs?.items]
+  const sorted = useMemo(
+    () => data.certifications?.items ? [...data.certifications.items].sort((a, b) => b.count - a.count) : [],
+    [data.certifications?.items]
   );
-  const certsToShow = showAllCerts ? sortedCerts : sortedCerts.slice(0, 5);
-
-  const hasSkills = data.skills?.items?.length > 0;
-  const hasExp = data.experience?.items?.length > 0;
-  const hasEdu = data.education?.items?.length > 0;
-  const hasSecondary = hasSkills || hasExp || hasEdu;
+  const visible = showAll ? sorted : sorted.slice(0, 7);
+  const maxPct = sorted.length > 0 ? sorted[0].percentage : 0;
 
   return (
-    <Box bg={containerBg} borderRadius="lg">
-      {/* ── Header ── */}
-      <Box textAlign="center" mb={4}>
-        <HStack justify="center" spacing={2} mb={1}>
-          <Icon as={FaCertificate} color={accentColor} w={5} h={5} />
-          <Heading as="h2" size="md" color={titleColor}>
-            Certification Demand
-          </Heading>
-        </HStack>
-        <Text fontSize="sm" color={mutedColor}>
-          {data.metadata.search_criteria.job_title}
-          {data.metadata.search_criteria.location && ` in ${data.metadata.search_criteria.location}`}
-          {' • '}{totalJobs} jobs analyzed
-        </Text>
-      </Box>
+    <Box>
+      {/* Stats row */}
+      <StatsSummary data={data} />
 
-      {/* ── Cert Rankings (Primary) ── */}
-      {sortedCerts.length > 0 ? (
-        <Box
-          bg={certSectionBg}
-          p={4}
-          borderRadius="lg"
-          borderWidth="1px"
-          borderColor={certSectionBorder}
-          mb={4}
-        >
-          <VStack spacing={3} align="stretch">
-            {certsToShow.map((item, index) => (
-              <CertItemDisplay key={`cert-${index}-${item.name}`} item={item} totalJobs={totalJobs} />
+      {/* Cert Header */}
+      <HStack spacing={2} mb={3}>
+        <Icon as={FaCertificate} color={accent} w={4} h={4} />
+        <Heading as="h2" size="sm" color={titleColor}>Certification Rankings</Heading>
+        <Text fontSize="xs" color={muted}>
+          — {data.metadata.search_criteria.job_title}
+          {data.metadata.search_criteria.location && ` in ${data.metadata.search_criteria.location}`}
+        </Text>
+      </HStack>
+
+      {/* Cert List */}
+      {sorted.length > 0 ? (
+        <Box bg={sectionBg} p={2} borderRadius="lg">
+          <VStack spacing={1} align="stretch">
+            {visible.map((item, i) => (
+              <CertRow key={`${i}-${item.name}`} item={item} rank={i + 1} totalJobs={totalJobs} maxPct={maxPct} />
             ))}
           </VStack>
-
-          {sortedCerts.length > 5 && (
-            <Flex justifyContent="center" mt={3}>
+          {sorted.length > 7 && (
+            <Flex justifyContent="center" mt={2}>
               <Button
-                size="sm"
-                variant="outline"
-                colorScheme="teal"
-                onClick={() => setShowAllCerts(!showAllCerts)}
-                leftIcon={showAllCerts ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                size="xs" variant="ghost" colorScheme="teal"
+                onClick={() => setShowAll(!showAll)}
+                rightIcon={showAll ? <ChevronUpIcon /> : <ChevronDownIcon />}
               >
-                {showAllCerts ? 'Show Top 5' : `Show All (${sortedCerts.length})`}
+                {showAll ? 'Show less' : `+${sorted.length - 7} more`}
               </Button>
             </Flex>
           )}
         </Box>
       ) : (
-        <Box bg={certSectionBg} p={6} borderRadius="lg" borderWidth="1px" borderColor={certSectionBorder} mb={4} textAlign="center">
-          <Text color={mutedColor}>No certifications found in the analyzed job postings.</Text>
+        <Box bg={sectionBg} p={8} borderRadius="lg" textAlign="center">
+          <Text color={muted}>No certifications found in the analyzed postings.</Text>
         </Box>
-      )}
-
-      {/* ── Secondary Sections (Collapsible) ── */}
-      {hasSecondary && (
-        <Accordion allowMultiple>
-          {hasSkills && (
-            <AccordionItem border="none" mb={2}>
-              <AccordionButton bg={accordionBg} borderRadius="md" borderWidth="1px" borderColor={accordionBorder} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
-                <Box flex="1" textAlign="left">
-                  <HStack>
-                    <Text fontWeight="semibold" fontSize="sm" color={titleColor}>Top Skills</Text>
-                    <Badge colorScheme="blue" fontSize="xs">{data.skills.items.length}</Badge>
-                  </HStack>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={2} pt={2}>
-                <SecondarySection section={data.skills} />
-              </AccordionPanel>
-            </AccordionItem>
-          )}
-
-          {hasExp && (
-            <AccordionItem border="none" mb={2}>
-              <AccordionButton bg={accordionBg} borderRadius="md" borderWidth="1px" borderColor={accordionBorder} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
-                <Box flex="1" textAlign="left">
-                  <HStack>
-                    <Text fontWeight="semibold" fontSize="sm" color={titleColor}>Experience Requirements</Text>
-                    <Badge colorScheme="purple" fontSize="xs">{data.experience.items.length}</Badge>
-                  </HStack>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={2} pt={2}>
-                <SecondarySection section={data.experience} />
-              </AccordionPanel>
-            </AccordionItem>
-          )}
-
-          {hasEdu && (
-            <AccordionItem border="none" mb={2}>
-              <AccordionButton bg={accordionBg} borderRadius="md" borderWidth="1px" borderColor={accordionBorder} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
-                <Box flex="1" textAlign="left">
-                  <HStack>
-                    <Text fontWeight="semibold" fontSize="sm" color={titleColor}>Education Requirements</Text>
-                    <Badge colorScheme="orange" fontSize="xs">{data.education.items.length}</Badge>
-                  </HStack>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={2} pt={2}>
-                <SecondarySection section={data.education} />
-              </AccordionPanel>
-            </AccordionItem>
-          )}
-        </Accordion>
       )}
     </Box>
   );

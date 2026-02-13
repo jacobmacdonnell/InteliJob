@@ -1,6 +1,4 @@
-import { TimeRangeOption } from './types';
-
-export const TIME_RANGE_OPTIONS: TimeRangeOption[] = [
+export const TIME_RANGE_OPTIONS = [
   { value: '1d', label: 'Past 24 hours' },
   { value: '3d', label: 'Past 3 days' },
   { value: '7d', label: 'Past 7 days' },
@@ -9,12 +7,12 @@ export const TIME_RANGE_OPTIONS: TimeRangeOption[] = [
 ];
 
 export const JOB_TITLE_EXAMPLES: string[] = [
-  "Cybersecurity Analyst",
-  "Security Engineer",
-  "Software Engineer",
-  "Frontend Developer",
-  "Data Scientist",
-  "Product Manager",
-  "UX Designer",
-  "SOC Analyst",
+  'Cybersecurity Analyst',
+  'Security Engineer',
+  'SOC Analyst',
+  'Penetration Tester',
+  'Cloud Security Engineer',
+  'GRC Analyst',
+  'Security Architect',
+  'Threat Analyst',
 ];

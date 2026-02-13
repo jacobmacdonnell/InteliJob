@@ -10,44 +10,20 @@ export interface JobSource {
   job_url?: string;
 }
 
-export interface ExtractedItem {
+export interface CertItem {
   name: string;
+  full_name?: string;
+  org?: string;
   count: number;
   percentage: number;
   sources?: JobSource[];
-  full_name?: string;
-  org?: string;
-}
-
-export interface ReportSection {
-  title: string;
-  items: ExtractedItem[];
-}
-
-export interface BackendReportSection {
-  title: string;
-  items: ExtractedItem[];
-}
-
-export interface BackendReportData {
-  certifications: BackendReportSection;
-  skills: BackendReportSection;
-  experience: BackendReportSection;
-  education: BackendReportSection;
-  total_jobs_found: number;
-  jobs_with_descriptions: number;
-  search_criteria: {
-    job_title: string;
-    location?: string;
-    time_range?: string;
-  };
 }
 
 export interface ReportData {
-  certifications: ReportSection;
-  skills: ReportSection;
-  experience: ReportSection;
-  education: ReportSection;
+  certifications: {
+    title: string;
+    items: CertItem[];
+  };
   metadata: {
     total_jobs_found: number;
     jobs_with_descriptions: number;
@@ -57,6 +33,17 @@ export interface ReportData {
       time_range?: string;
     };
   };
+}
+
+export interface ScanHistoryEntry {
+  id: number;
+  timestamp: string;
+  job_title: string;
+  location?: string;
+  time_range?: string;
+  total_jobs: number;
+  jobs_with_descriptions: number;
+  cert_data: CertItem[];
 }
 
 export interface TimeRangeOption {

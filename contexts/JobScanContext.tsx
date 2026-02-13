@@ -1,59 +1,62 @@
-import React, { createContext, useState, useCallback, useContext, ReactNode } from 'react';
-import { fetchReport } from '../services/JobScanService';
-import type { JobCriteria, ReportData } from '../types';
+import React, { createContext, useState, useCallback, useContext, useEffect, ReactNode } from 'react';
+import { fetchReport, fetchHistory } from '../services/JobScanService';
+import type { JobCriteria, ReportData, ScanHistoryEntry } from '../types';
 
 interface JobScanContextType {
   reportData: ReportData | null;
-  savedResults: ReportData[];
   isLoading: boolean;
   error: string | null;
+  history: ScanHistoryEntry[];
+  historyLoading: boolean;
   handleScan: (criteria: JobCriteria) => Promise<void>;
-  clearSaved: () => void;
+  loadHistory: () => Promise<void>;
 }
 
 const JobScanContext = createContext<JobScanContextType | undefined>(undefined);
 
 export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [savedResults, setSavedResults] = useState<ReportData[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<ScanHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const data = await fetchHistory();
+      setHistory(data);
+    } catch {
+      console.error('Failed to load history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
 
   const handleScan = useCallback(async (criteria: JobCriteria) => {
     setIsLoading(true);
     setError(null);
-
-    // Save current result for comparison before replacing it
-    if (reportData) {
-      setSavedResults(prev => {
-        const updated = [reportData, ...prev];
-        return updated.slice(0, 3); // Keep max 3 saved results
-      });
-    }
-
     setReportData(null);
     try {
       const data = await fetchReport(criteria);
       setReportData(data);
+      // Refresh history after new scan
+      loadHistory();
     } catch (err: any) {
-      console.error("Scan failed:", err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unknown error occurred while fetching the report.");
-      }
+      setError(err instanceof Error ? err.message : 'Unknown error');
       setReportData(null);
     } finally {
       setIsLoading(false);
     }
-  }, [reportData]);
+  }, [loadHistory]);
 
-  const clearSaved = useCallback(() => {
-    setSavedResults([]);
-  }, []);
+  // Load history on mount
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   return (
-    <JobScanContext.Provider value={{ reportData, savedResults, isLoading, error, handleScan, clearSaved }}>
+    <JobScanContext.Provider value={{ reportData, isLoading, error, history, historyLoading, handleScan, loadHistory }}>
       {children}
     </JobScanContext.Provider>
   );
@@ -61,8 +64,6 @@ export const JobScanProvider: React.FC<{ children: ReactNode }> = ({ children })
 
 export const useJobScan = (): JobScanContextType => {
   const context = useContext(JobScanContext);
-  if (context === undefined) {
-    throw new Error('useJobScan must be used within a JobScanProvider');
-  }
+  if (!context) throw new Error('useJobScan must be used within a JobScanProvider');
   return context;
 };
