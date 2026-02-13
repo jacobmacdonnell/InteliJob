@@ -1,70 +1,48 @@
 #!/usr/bin/env python3
-"""Quick smoke test for InteliJob backend API."""
+"""Backend API smoke tests using an in-process test client."""
 
-import sys
-import requests
-import time
+from fastapi.testclient import TestClient
+import main
 
-BACKEND_URL = "http://localhost:8000"
 
-def test_health():
-    """Test backend health endpoint."""
+client = TestClient(main.app)
+
+
+def test_health() -> None:
+    """Health endpoint should respond with service metadata."""
+    response = client.get('/health')
+    response.raise_for_status()
+
+    data = response.json()
+    assert data['status'] == 'healthy'
+    assert 'version' in data
+
+
+def test_analyze() -> None:
+    """Analyze endpoint should return parsed certification data."""
+
+    async def fake_fetch_jobs_expanded(job_title: str, location: str = None, date_posted: str = 'today'):
+        return ([{
+            'job_title': 'Cybersecurity Analyst',
+            'company_name': 'Acme Corp',
+            'job_description': 'Candidates should hold Security+ and CySA+ certifications.',
+            'job_url': 'https://example.com/job/1',
+        }], [job_title])
+
+    original = main.fetch_jobs_expanded
+    main.fetch_jobs_expanded = fake_fetch_jobs_expanded
     try:
-        r = requests.get(f"{BACKEND_URL}/health", timeout=5)
-        data = r.json()
-        print(f"  Health: {data.get('status')}")
-        print(f"  RapidAPI: {'configured' if data.get('rapidapi_configured') else 'NOT configured'}")
-        return r.status_code == 200
-    except Exception as e:
-        print(f"  FAIL: {e}")
-        return False
+        response = client.post('/analyze-jobs', json={
+            'job_title': 'Cybersecurity Analyst',
+            'time_range': '1d',
+        })
+    finally:
+        main.fetch_jobs_expanded = original
 
-def test_analyze():
-    """Test job analysis endpoint."""
-    try:
-        r = requests.post(
-            f"{BACKEND_URL}/analyze-jobs",
-            json={"job_title": "Cybersecurity Analyst", "time_range": "1d"},
-            timeout=30,
-        )
-        if r.status_code == 200 and r.json().get("success"):
-            data = r.json()
-            certs = len(data.get("data", {}).get("certifications", {}).get("items", []))
-            jobs = data.get("jobs_analyzed", 0)
-            print(f"  Jobs analyzed: {jobs}")
-            print(f"  Certs found: {certs}")
-            return True
-        else:
-            print(f"  FAIL: HTTP {r.status_code}")
-            return False
-    except requests.exceptions.Timeout:
-        print("  FAIL: timeout")
-        return False
-    except Exception as e:
-        print(f"  FAIL: {e}")
-        return False
+    response.raise_for_status()
+    data = response.json()
 
-def main():
-    print("InteliJob Smoke Test")
-    print("=" * 40)
-
-    tests = [
-        ("Health Check", test_health),
-        ("Job Analysis", test_analyze),
-    ]
-
-    passed = 0
-    for name, fn in tests:
-        print(f"\n{name}:")
-        if fn():
-            passed += 1
-            print(f"  -> PASS")
-        else:
-            print(f"  -> FAIL")
-
-    print(f"\n{'=' * 40}")
-    print(f"Result: {passed}/{len(tests)} passed")
-    return 0 if passed == len(tests) else 1
-
-if __name__ == "__main__":
-    sys.exit(main())
+    assert data['success'] is True
+    cert_items = data['data']['certifications']['items']
+    assert len(cert_items) >= 1
+    assert any(item['name'] in {'Security+', 'CySA+'} for item in cert_items)
