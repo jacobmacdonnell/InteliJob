@@ -251,3 +251,13 @@ def test_compute_title_distribution_normalizes_case_and_spacing() -> None:
     assert dist[0]['title'] == 'SOC Analyst'
     assert dist[0]['count'] == 3
     assert dist[0]['percentage'] == 75.0
+
+
+def test_analyze_rejects_invalid_time_range(client: TestClient) -> None:
+    """Invalid time range inputs should be rejected explicitly."""
+    response = client.post('/analyze-jobs', json={
+        'job_title': 'Cybersecurity Analyst',
+        'time_range': 'all',
+    })
+
+    assert response.status_code == 422

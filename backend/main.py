@@ -4,7 +4,7 @@ import json
 import sqlite3
 import asyncio
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Literal
 from pathlib import Path
 from collections import Counter
 import httpx
@@ -45,7 +45,7 @@ print(f"Environment: {ENVIRONMENT}")
 class JobSearchRequest(BaseModel):
     job_title: str
     location: Optional[str] = None
-    time_range: Optional[str] = "1d"
+    time_range: Literal["1d", "3d", "7d", "14d", "30d"] = "1d"
 
 class JobAnalysisResponse(BaseModel):
     success: bool
