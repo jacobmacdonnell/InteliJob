@@ -37,6 +37,11 @@ python start.py
 # API at http://localhost:8000
 ```
 
+**Full-stack checks:**
+```bash
+npm run check:fullstack
+```
+
 **Environment Variables:**
 - `RAPIDAPI_KEY` — Required for live job data (get one at [RapidAPI JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch))
 - `VITE_API_BASE_URL` — Frontend API endpoint (default: `http://localhost:8000`)
@@ -44,6 +49,8 @@ python start.py
 - `VITE_ADMIN_API_KEY` — Optional frontend header value for calling protected `/history` and `/stats`
 - `SCAN_RETENTION_DAYS` — Optional backend retention window in days (default: `0` = keep all by age)
 - `MAX_SCAN_ROWS` — Optional backend cap on persisted scans (default: `0` = no row cap)
+- `HOST` — Backend bind host (default: `127.0.0.1` for local-only safety; set `0.0.0.0` only if you need LAN/container access)
+- `CORS_ORIGINS` — Optional comma-separated allowed frontend origins for backend CORS (default: `http://localhost:5173,http://localhost:3000`)
 
 **`.env` file locations (local setup):**
 - Put backend-only variables in `backend/.env` (`RAPIDAPI_KEY`, `ADMIN_API_KEY`, `SCAN_RETENTION_DAYS`, `MAX_SCAN_ROWS`).
