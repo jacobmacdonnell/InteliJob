@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check:fullstack": "npm run type-check && npm run build && python3 -m pytest backend/test_e2e.py"
   },
   "author": "Jacob Macdonnell",
   "license": "MIT",
