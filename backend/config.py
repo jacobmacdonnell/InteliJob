@@ -6,14 +6,8 @@ class Settings:
     def __init__(self):
         self.rapidapi_key = os.getenv("RAPIDAPI_KEY")
         self.port = int(os.getenv("PORT", "8000"))
-        # Local-safe default: bind loopback unless explicitly overridden
-        self.host = os.getenv("HOST", "127.0.0.1")
+        self.host = os.getenv("HOST", "0.0.0.0")
         self.environment = os.getenv("ENVIRONMENT", "development")
-
-        # CORS
-        default_origins = "http://localhost:5173,http://localhost:3000"
-        raw_origins = os.getenv("CORS_ORIGINS", default_origins)
-        self.cors_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
 
         # JSearch API
         self.jsearch_api_url = "https://jsearch.p.rapidapi.com/search"
