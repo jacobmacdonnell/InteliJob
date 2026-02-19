@@ -2,6 +2,16 @@
 
 Thanks for your interest in contributing.
 
+## Scope and expectations
+
+This is a personal project shared for community use. Contributions are welcome, but review/merge timing is best-effort.
+
+Great contribution types:
+- bug fixes
+- extraction/ranking improvements
+- docs/usability improvements
+- tests for edge cases in job parsing
+
 ## Development setup
 
 1. Fork the repository and clone your fork.
