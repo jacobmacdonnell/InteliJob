@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import json
 import sqlite3
 import asyncio
@@ -42,16 +43,10 @@ app.add_middleware(
 )
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
-print(f"Environment: {ENVIRONMENT}")
-
-# Determine base path for bundled static files or dev environment
-import sys
 
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-    # Running in PyInstaller bundle
     BASE_DIR = Path(sys._MEIPASS)
 else:
-    # Running in normal Python environment. We assume backend/main.py is located at InteliJob/backend/main.py
     BASE_DIR = Path(__file__).parent.parent
 
 FRONTEND_DIST = BASE_DIR / "dist"

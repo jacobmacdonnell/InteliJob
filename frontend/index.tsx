@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App'; // App is the default export from App.tsx
+import App from './App';
 import { ChakraProvider, extendTheme, type ThemeConfig } from '@chakra-ui/react';
-import './index.css'; // Assuming your global CSS is index.css in the root
+import './index.css';
 
 const config: ThemeConfig = {
   initialColorMode: 'dark',
@@ -23,17 +23,17 @@ const colors = {
     900: '#134e4a',
     950: '#062f2a',
   },
-  gray: { // Slightly adjusted for dark theme aesthetics if needed
+  gray: {
     50: '#f7fafc',
     100: '#edf2f7',
     200: '#e2e8f0',
     300: '#cbd5e0',
-    400: '#a0aec0', // Lighter text on dark backgrounds
+    400: '#a0aec0',
     500: '#718096',
     600: '#4a5568',
-    700: '#2d3748', // Component backgrounds
-    800: '#1a202c', // Darker component backgrounds / borders
-    900: '#171923', // Main background
+    700: '#2d3748',
+    800: '#1a202c',
+    900: '#171923',
   },
 };
 
@@ -123,7 +123,7 @@ const theme = extendTheme({
         }),
       },
     },
-    // Define other component styles if needed
+
   },
 });
 
