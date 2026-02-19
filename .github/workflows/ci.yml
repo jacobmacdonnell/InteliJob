@@ -27,7 +27,7 @@ jobs:
         run: npm ci
 
       - name: Install backend deps
-        run: pip install -r backend/requirements.txt
+        run: python -m pip install -r backend/requirements-dev.txt
 
       - name: Type check
         run: npm run type-check
