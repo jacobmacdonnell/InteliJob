@@ -9,7 +9,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "check:fullstack": "npm run type-check && npm run build && python3 -m pytest backend/test_e2e.py"
+    "check:fullstack": "npm run type-check && npm run build && python3 -m pytest backend/tests/test_e2e.py",
+    "start": "python3 scripts/dev_start.py",
+    "start:frontend": "npm run dev",
+    "start:backend": "cd backend && python3 start.py"
   },
   "author": "Jacob Macdonnell",
   "license": "MIT",

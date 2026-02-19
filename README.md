@@ -6,6 +6,26 @@ InteliJob is a job market research tool that scans live job postings and ranks c
 
 ---
 
+## Project Status
+
+InteliJob is stable for personal and community use and is now being prepared for broader open-source collaboration.
+
+If you fork this project, you can customize:
+- Job title expansion logic
+- Skill/cert extraction patterns
+- Reporting output and weighting
+- Retention and scan history policies
+
+---
+
+## What this project is (and is not)
+
+- **Is:** a practical personal/community tool for cybersecurity job-market signal gathering.
+- **Is not:** a guaranteed source of hiring truth or career advice.
+- Results depend on data quality from external job APIs and the extraction rules in this repo.
+
+---
+
 ## ✨ Features
 
 - Multi-title search expansion for common cybersecurity role families
@@ -47,23 +67,31 @@ cp backend/.env.example backend/.env
 
 Set your `RAPIDAPI_KEY` in `backend/.env`.
 
-### 3) Run locally
+### 3) Run locally (simple)
 
-**Backend:**
 ```bash
-cd backend
-python start.py
+npm start
 ```
 
-**Frontend:**
-```bash
-npm run dev
-```
+This starts both backend and frontend together.
 
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:8000`
+- Stop everything with `Ctrl+C`
 
-### 4) Run full checks
+### 3b) Run separately (optional)
+
+**Backend only:**
+```bash
+npm run start:backend
+```
+
+**Frontend only:**
+```bash
+npm run start:frontend
+```
+
+### 4) Run checks
 
 ```bash
 npm run check:fullstack
@@ -98,6 +126,27 @@ npm run check:fullstack
 - Local scan DB (`backend/data/scans.db`) is intentionally git-ignored
 - Use `ADMIN_API_KEY` for protected endpoints
 - For responsible disclosure, see [SECURITY.md](SECURITY.md)
+
+---
+
+## 🗺️ Open-Source Readiness Checklist
+
+Before announcing a public release:
+
+- Confirm CI is passing on `main`
+- Verify `README.md` setup steps work from a clean clone
+- Confirm `SECURITY.md` reporting channel is valid
+- Remove any temporary personal/test credentials from local copies
+- Create an initial release/tag with a short changelog
+
+---
+
+## 📁 Repository Structure
+
+- `frontend/` — React + TypeScript app (components, context, services)
+- `backend/` — FastAPI API, config, requirements, tests
+- `scripts/` — local helper scripts (`dev_start.py`, Windows scripts)
+- `.github/workflows/` — CI checks
 
 ---
 

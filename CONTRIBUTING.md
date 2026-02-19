@@ -2,6 +2,16 @@
 
 Thanks for your interest in contributing.
 
+## Scope and expectations
+
+This is a personal project shared for community use. Contributions are welcome, but review/merge timing is best-effort.
+
+Great contribution types:
+- bug fixes
+- extraction/ranking improvements
+- docs/usability improvements
+- tests for edge cases in job parsing
+
 ## Development setup
 
 1. Fork the repository and clone your fork.
@@ -22,8 +32,10 @@ Thanks for your interest in contributing.
 
 ## Run locally
 
-- Frontend: `npm run dev`
-- Backend: `cd backend && python start.py`
+- Full app (recommended): `npm start`
+- Frontend only: `npm run start:frontend`
+- Backend only: `npm run start:backend`
+- Windows helper scripts: `scripts/windows/start.bat` and `scripts/windows/kill.bat`
 
 ## Validate changes
 
