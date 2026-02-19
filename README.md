@@ -130,19 +130,6 @@ npm run check:fullstack
 
 ---
 
-## Casual Open-Source Readiness
-
-For a **casual open-source launch**, this repo is in good shape now:
-- setup docs and env templates are present
-- CI runs checks on pull requests
-- security and conduct docs are included
-
-Before public sharing, do this final 10-minute pass:
-1. Create your first GitHub release/tag.
-2. Pin 1–3 example use cases in the README or as issues.
-3. Add one screenshot/GIF so people understand the tool quickly.
-
----
 
 ## 🗺️ Open-Source Readiness Checklist
 
@@ -153,6 +140,15 @@ Before announcing a public release:
 - Confirm `SECURITY.md` reporting channel is valid
 - Remove any temporary personal/test credentials from local copies
 - Create an initial release/tag with a short changelog
+
+---
+
+## 📁 Repository Structure
+
+- `frontend/` — React + TypeScript app (components, context, services)
+- `backend/` — FastAPI API, config, requirements, tests
+- `scripts/` — local helper scripts (`dev_start.py`, Windows scripts)
+- `.github/workflows/` — CI checks
 
 ---
 

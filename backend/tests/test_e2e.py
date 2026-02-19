@@ -5,15 +5,8 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
-import sys
-
 import pytest
 from fastapi.testclient import TestClient
-
-BACKEND_DIR = Path(__file__).resolve().parent
-if str(BACKEND_DIR) not in sys.path:
-    sys.path.insert(0, str(BACKEND_DIR))
 
 import main  # noqa: E402
 

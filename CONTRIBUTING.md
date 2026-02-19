@@ -35,6 +35,7 @@ Great contribution types:
 - Full app (recommended): `npm start`
 - Frontend only: `npm run start:frontend`
 - Backend only: `npm run start:backend`
+- Windows helper scripts: `scripts/windows/start.bat` and `scripts/windows/kill.bat`
 
 ## Validate changes
 
