@@ -2,19 +2,23 @@
 
 ## Supported Versions
 
-This project is maintained on a best-effort basis. Security fixes are applied to the latest main branch.
+This project is maintained on a best-effort basis. Security fixes are applied to the latest `main` branch.
 
 ## Reporting a Vulnerability
 
 Please do **not** file public GitHub issues for sensitive security reports.
 
-Instead, email: `security@intelijob.local` with:
+Use one of these private channels instead:
+
+1. **GitHub Security Advisory (preferred):** open a private vulnerability report in this repository's **Security** tab.
+2. **Direct maintainer contact:** if Security Advisories are unavailable, contact the maintainer privately and include `[SECURITY]` in the subject.
+
+Include:
 
 - A clear description of the issue
 - Reproduction steps or proof of concept
 - Potential impact
-
-You should receive an acknowledgement within 72 hours.
+- Any suggested mitigation
 
 ## Secret Handling
 
