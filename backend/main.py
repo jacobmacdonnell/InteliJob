@@ -10,6 +10,8 @@ from collections import Counter
 import httpx
 from fastapi import FastAPI, HTTPException, Request, Body, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 load_dotenv()
@@ -40,6 +42,17 @@ app.add_middleware(
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 print(f"Environment: {ENVIRONMENT}")
+
+# Determine base path for bundled static files or dev environment
+import sys
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    # Running in PyInstaller bundle
+    BASE_DIR = Path(sys._MEIPASS)
+else:
+    # Running in normal Python environment. We assume backend/main.py is located at InteliJob/backend/main.py
+    BASE_DIR = Path(__file__).parent.parent
+
+FRONTEND_DIST = BASE_DIR / "dist"
 
 # ── Pydantic Models ──────────────────────────────────────────────────────────
 class JobSearchRequest(BaseModel):
@@ -220,8 +233,10 @@ for abbrev, info in CERT_DICTIONARY.items():
 
 
 # ── SQLite Persistence ───────────────────────────────────────────────────────
-DATA_DIR = Path(__file__).parent / "data"
-DATA_DIR.mkdir(exist_ok=True)
+# In a PyInstaller standalone bundle, we cannot store the DB in the installation folder or _MEIPASS
+# as it would be wiped out or unwriteable. We use a dedicated folder in the user's home directory.
+DATA_DIR = Path.home() / ".intelijob" / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 DB_PATH = DATA_DIR / "scans.db"
 
 def _get_db() -> sqlite3.Connection:
@@ -684,6 +699,29 @@ async def health_check():
         "role_families": len(ROLE_FAMILIES),
         "version": "3.0.0",
     }
+
+# ── Serve Frontend ───────────────────────────────────────────────────────────
+if FRONTEND_DIST.exists() and FRONTEND_DIST.is_dir():
+    # Mount the assets directory explicitly
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        
+    @app.get("/{full_path:path}")
+    @limiter.exempt
+    async def serve_frontend(full_path: str):
+        # Prevent directory traversal
+        if ".." in full_path:
+            raise HTTPException(status_code=400, detail="Invalid path")
+            
+        file_path = FRONTEND_DIST / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        # Fallback to index.html for SPA routing
+        return FileResponse(FRONTEND_DIST / "index.html")
+else:
+    print(f"Warning: Frontend dist folder not found at {FRONTEND_DIST}")
+
 
 if __name__ == "__main__":
     import uvicorn

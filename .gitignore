@@ -16,6 +16,7 @@ backend/.env.*
 dist/
 build/
 .vite/
+InteliJob.spec
 
 # Logs
 *.log

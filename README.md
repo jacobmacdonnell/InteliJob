@@ -47,6 +47,22 @@ If you fork this project, you can customize:
 
 ## 🚀 Quick Start
 
+**InteliJob is now packaged as a standalone standalone executable!**
+
+You no longer need to install Python, Node.js, or run any servers yourself.
+
+1. Download the latest `InteliJob.exe` from the Releases page (or build it yourself)
+2. Double-click `InteliJob.exe`
+3. A terminal window will open to run the local server, and your default web browser will automatically open to `http://localhost:8000`.
+
+*Note: You still need a RapidAPI key to run live scans. Keep your key handy to enter it in the app settings.*
+
+---
+
+## 🛠️ Developer Setup & Building
+
+If you want to contribute or build the executable yourself:
+
 ### Prerequisites
 
 - Node.js 18+ and npm
@@ -57,9 +73,10 @@ If you fork this project, you can customize:
 ```bash
 npm install
 cd backend && pip install -r requirements.txt
+cd ..
 ```
 
-### 2) Configure environment variables
+### 2) Configure environment
 
 ```bash
 cp .env.example .env.local
@@ -68,34 +85,28 @@ cp backend/.env.example backend/.env
 
 Set your `RAPIDAPI_KEY` in `backend/.env`.
 
-### 3) Run locally (simple)
+### 3) Build the Standalone Executable
+
+We provide a script that compiles the React frontend and packages the FastAPI backend into a single executable using PyInstaller:
 
 ```bash
-npm start
+python build_app.py
 ```
 
-This starts both backend and frontend together.
+Once finished, your executable will be located in the `dist/` folder.
 
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8000`
-- Stop everything with `Ctrl+C`
+### 4) Local Development
 
-### 3b) Run separately (optional)
+To run the frontend and backend separately for active development:
 
-**Backend only:**
+**Backend:**
 ```bash
-npm run start:backend
+npm run dev:backend
 ```
 
-**Frontend only:**
+**Frontend:**
 ```bash
-npm run start:frontend
-```
-
-### 4) Run checks
-
-```bash
-npm run check:fullstack
+npm run dev:frontend
 ```
 
 ---
@@ -147,7 +158,7 @@ Before announcing a public release:
 
 - `frontend/` — React + TypeScript app (components, context, services)
 - `backend/` — FastAPI API, config, requirements, tests
-- `scripts/` — local helper scripts (`dev_start.py`, Windows scripts)
+- `build_app.py` — Script to compile the standalone PyInstaller executable
 - `.github/workflows/` — CI checks
 
 ---
