@@ -6,16 +6,28 @@ import StatsPage from './components/StatsPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
+type AppView = 'all' | 'scan' | 'stats';
+
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'scan' | 'stats'>('scan');
+  const [activeView, setActiveView] = useState<AppView>('all');
 
   return (
     <JobScanProvider>
       <Box minH="100vh" display="flex" flexDirection="column">
-        <Header activeTab={activeTab} onTabChange={setActiveTab} />
+        <Header activeView={activeView} onViewChange={setActiveView} />
+
         <Box flex="1">
-          {activeTab === 'scan' ? <ToolPage /> : <StatsPage />}
+          {activeView === 'all' && (
+            <>
+              <ToolPage />
+              <Box borderTopWidth="1px" borderColor="gray.200" _dark={{ borderColor: 'gray.700' }} />
+              <StatsPage />
+            </>
+          )}
+          {activeView === 'scan' && <ToolPage />}
+          {activeView === 'stats' && <StatsPage />}
         </Box>
+
         <Footer />
       </Box>
     </JobScanProvider>

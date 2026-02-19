@@ -31,6 +31,7 @@ If you fork this project, you can customize:
 - Multi-title search expansion for common cybersecurity role families
 - Certification extraction and ranking from job descriptions
 - Time-range filtering and trend/history views
+- All-in-one dashboard view (scan + stats in one flow)
 - Protected admin endpoints for scan history and statistics
 - Local SQLite persistence with optional retention controls
 
