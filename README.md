@@ -30,8 +30,6 @@ InteliJob scans live job postings and ranks certifications by real employer dema
 
 ## 🛠️ Build It Yourself
 
-If you want to build the `.exe` from source:
-
 ### Prerequisites
 - Node.js 18+
 - Python 3.9+
@@ -39,7 +37,6 @@ If you want to build the `.exe` from source:
 ### Steps
 
 ```bash
-# Clone the repo
 git clone https://github.com/JacobMacdonnell/InteliJob.git
 cd InteliJob
 
@@ -52,41 +49,39 @@ cp backend/.env.example backend/.env
 # Edit backend/.env and add your RAPIDAPI_KEY
 
 # Build the standalone executable
-python build_app.py
+python tools/build_app.py
 ```
 
-Your executable will be in the `dist/` folder.
+Your `.exe` will be in the `dist/` folder.
 
-### Local Development
+### Local Dev
 
 ```bash
-npm run dev:frontend   # React dev server
-npm run dev:backend    # FastAPI dev server
+npm run dev:frontend   # React dev server on :5173
+npm run dev:backend    # FastAPI dev server on :8000
 ```
 
 ---
 
-## 📁 Project Structure
+## 📁 Structure
 
 ```
 frontend/       → React + TypeScript UI (Chakra UI)
 backend/        → FastAPI API + SQLite storage
-build_app.py    → Builds the standalone .exe with PyInstaller
+tools/          → Build script + lint config (dev-only)
 ```
 
 ---
 
-## ⚙️ Environment Variables
+## ⚙️ Config
 
-All config lives in `backend/.env`:
+All config lives in `backend/.env` (copy from `backend/.env.example`):
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `RAPIDAPI_KEY` | **Yes** | — | Your JSearch API key |
-| `ADMIN_API_KEY` | No | — | Protects `/history` and `/stats` endpoints |
-| `PORT` | No | `8000` | Server port |
-| `SCAN_RETENTION_DAYS` | No | `0` (off) | Auto-delete scans older than N days |
-| `MAX_SCAN_ROWS` | No | `0` (off) | Cap total stored scans |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `RAPIDAPI_KEY` | **Yes** | Your JSearch API key |
+| `ADMIN_API_KEY` | No | Protects `/history` and `/stats` |
+| `PORT` | No | Server port (default `8000`) |
 
 ---
 
