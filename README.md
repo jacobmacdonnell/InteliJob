@@ -6,6 +6,26 @@ InteliJob is a job market research tool that scans live job postings and ranks c
 
 ---
 
+## Project Status
+
+InteliJob is stable for personal and community use and is now being prepared for broader open-source collaboration.
+
+If you fork this project, you can customize:
+- Job title expansion logic
+- Skill/cert extraction patterns
+- Reporting output and weighting
+- Retention and scan history policies
+
+---
+
+## What this project is (and is not)
+
+- **Is:** a practical personal/community tool for cybersecurity job-market signal gathering.
+- **Is not:** a guaranteed source of hiring truth or career advice.
+- Results depend on data quality from external job APIs and the extraction rules in this repo.
+
+---
+
 ## ✨ Features
 
 - Multi-title search expansion for common cybersecurity role families
@@ -63,7 +83,7 @@ npm run dev
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:8000`
 
-### 4) Run full checks
+### 4) Run checks
 
 ```bash
 npm run check:fullstack
@@ -98,6 +118,32 @@ npm run check:fullstack
 - Local scan DB (`backend/data/scans.db`) is intentionally git-ignored
 - Use `ADMIN_API_KEY` for protected endpoints
 - For responsible disclosure, see [SECURITY.md](SECURITY.md)
+
+---
+
+## Casual Open-Source Readiness
+
+For a **casual open-source launch**, this repo is in good shape now:
+- setup docs and env templates are present
+- CI runs checks on pull requests
+- security and conduct docs are included
+
+Before public sharing, do this final 10-minute pass:
+1. Create your first GitHub release/tag.
+2. Pin 1–3 example use cases in the README or as issues.
+3. Add one screenshot/GIF so people understand the tool quickly.
+
+---
+
+## 🗺️ Open-Source Readiness Checklist
+
+Before announcing a public release:
+
+- Confirm CI is passing on `main`
+- Verify `README.md` setup steps work from a clean clone
+- Confirm `SECURITY.md` reporting channel is valid
+- Remove any temporary personal/test credentials from local copies
+- Create an initial release/tag with a short changelog
 
 ---
 
