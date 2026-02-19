@@ -1,171 +1,92 @@
 # InteliJob 🔍
 
-**Find out which certifications employers actually want.**
+**Find out which cybersecurity certifications employers actually want.**
 
-InteliJob is a job market research tool that scans live job postings and ranks certifications, skills, and requirements by employer demand. It is designed to help cybersecurity professionals make data-informed decisions about what to study next.
-
----
-
-## Project Status
-
-InteliJob is stable for personal and community use and is now being prepared for broader open-source collaboration.
-
-If you fork this project, you can customize:
-- Job title expansion logic
-- Skill/cert extraction patterns
-- Reporting output and weighting
-- Retention and scan history policies
-
----
-
-## What this project is (and is not)
-
-- **Is:** a practical personal/community tool for cybersecurity job-market signal gathering.
-- **Is not:** a guaranteed source of hiring truth or career advice.
-- Results depend on data quality from external job APIs and the extraction rules in this repo.
-
----
-
-## ✨ Features
-
-- Multi-title search expansion for common cybersecurity role families
-- Certification extraction and ranking from job descriptions
-- Time-range filtering and trend/history views
-- All-in-one dashboard view (scan + stats in one flow)
-- Protected admin endpoints for scan history and statistics
-- Local SQLite persistence with optional retention controls
-
----
-
-## 🧰 Tech Stack
-
-- **Frontend:** React 18, TypeScript, Chakra UI, Vite
-- **Backend:** FastAPI, SQLite, regex-based extraction (+ optional spaCy)
-- **Data source:** RapidAPI JSearch API
+InteliJob scans live job postings and ranks certifications by real employer demand. Paste in a job title, and it tells you which certs show up the most — so you can study smarter, not harder.
 
 ---
 
 ## 🚀 Quick Start
 
-**InteliJob is now packaged as a standalone standalone executable!**
+**Just download and run — no install required.**
 
-You no longer need to install Python, Node.js, or run any servers yourself.
+1. Grab `InteliJob.exe` from the [Releases](https://github.com/JacobMacdonnell/InteliJob/releases) page
+2. Double-click it
+3. Your browser opens automatically to `http://localhost:8000`
 
-1. Download the latest `InteliJob.exe` from the Releases page (or build it yourself)
-2. Double-click `InteliJob.exe`
-3. A terminal window will open to run the local server, and your default web browser will automatically open to `http://localhost:8000`.
-
-*Note: You still need a RapidAPI key to run live scans. Keep your key handy to enter it in the app settings.*
+> You'll need a free [RapidAPI](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) key to run live scans. Enter it in the app when prompted.
 
 ---
 
-## 🛠️ Developer Setup & Building
+## ✨ What It Does
 
-If you want to contribute or build the executable yourself:
+- Searches multiple variations of a job title (e.g. "SOC Analyst" also checks "Security Analyst", "Cyber Analyst", etc.)
+- Extracts cert mentions from job descriptions using pattern matching
+- Ranks certs by how often they appear across postings
+- Shows trends over time with scan history
+- Runs entirely on your machine — your data stays local (SQLite)
+
+---
+
+## 🛠️ Build It Yourself
+
+If you want to build the `.exe` from source:
 
 ### Prerequisites
-
-- Node.js 18+ and npm
+- Node.js 18+
 - Python 3.9+
 
-### 1) Install dependencies
+### Steps
 
 ```bash
+# Clone the repo
+git clone https://github.com/JacobMacdonnell/InteliJob.git
+cd InteliJob
+
+# Install dependencies
 npm install
-cd backend && pip install -r requirements.txt
-cd ..
-```
+cd backend && pip install -r requirements.txt && cd ..
 
-### 2) Configure environment
-
-```bash
-cp .env.example .env.local
+# Set up your API key
 cp backend/.env.example backend/.env
-```
+# Edit backend/.env and add your RAPIDAPI_KEY
 
-Set your `RAPIDAPI_KEY` in `backend/.env`.
-
-### 3) Build the Standalone Executable
-
-We provide a script that compiles the React frontend and packages the FastAPI backend into a single executable using PyInstaller:
-
-```bash
+# Build the standalone executable
 python build_app.py
 ```
 
-Once finished, your executable will be located in the `dist/` folder.
+Your executable will be in the `dist/` folder.
 
-### 4) Local Development
+### Local Development
 
-To run the frontend and backend separately for active development:
-
-**Backend:**
 ```bash
-npm run dev:backend
+npm run dev:frontend   # React dev server
+npm run dev:backend    # FastAPI dev server
 ```
 
-**Frontend:**
-```bash
-npm run dev:frontend
+---
+
+## 📁 Project Structure
+
+```
+frontend/       → React + TypeScript UI (Chakra UI)
+backend/        → FastAPI API + SQLite storage
+build_app.py    → Builds the standalone .exe with PyInstaller
 ```
 
 ---
 
 ## ⚙️ Environment Variables
 
-### Backend (`backend/.env`)
+All config lives in `backend/.env`:
 
-- `RAPIDAPI_KEY` (required for live data)
-- `ADMIN_API_KEY` (required to enable `/history` and `/stats`)
-- `SCAN_RETENTION_DAYS` (optional, `0` disables age pruning)
-- `MAX_SCAN_ROWS` (optional, `0` disables row-cap pruning)
-- `HOST` (default `127.0.0.1`)
-- `PORT` (default `8000`)
-- `CORS_ORIGINS` (comma-separated allowed origins)
-
-### Frontend (`.env.local`)
-
-- `VITE_API_BASE_URL` (default local backend URL)
-- `VITE_ADMIN_API_KEY` (optional)
-
-> `VITE_*` values are bundled into client-side JavaScript and are visible to users. Do not place sensitive secrets there.
-
----
-
-## 🔐 Security Notes for Public/Open-Source Use
-
-- Never commit `.env` files or API keys
-- Local scan DB (`backend/data/scans.db`) is intentionally git-ignored
-- Use `ADMIN_API_KEY` for protected endpoints
-- For responsible disclosure, see [SECURITY.md](SECURITY.md)
-
----
-
-
-## 🗺️ Open-Source Readiness Checklist
-
-Before announcing a public release:
-
-- Confirm CI is passing on `main`
-- Verify `README.md` setup steps work from a clean clone
-- Confirm `SECURITY.md` reporting channel is valid
-- Remove any temporary personal/test credentials from local copies
-- Create an initial release/tag with a short changelog
-
----
-
-## 📁 Repository Structure
-
-- `frontend/` — React + TypeScript app (components, context, services)
-- `backend/` — FastAPI API, config, requirements, tests
-- `build_app.py` — Script to compile the standalone PyInstaller executable
-- `.github/workflows/` — CI checks
-
----
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `RAPIDAPI_KEY` | **Yes** | — | Your JSearch API key |
+| `ADMIN_API_KEY` | No | — | Protects `/history` and `/stats` endpoints |
+| `PORT` | No | `8000` | Server port |
+| `SCAN_RETENTION_DAYS` | No | `0` (off) | Auto-delete scans older than N days |
+| `MAX_SCAN_ROWS` | No | `0` (off) | Cap total stored scans |
 
 ---
 
