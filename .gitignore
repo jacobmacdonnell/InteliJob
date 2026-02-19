@@ -7,8 +7,10 @@ __pycache__/
 # Environment
 .env
 .env.*
+!/.env.example
 backend/.env
 backend/.env.*
+!backend/.env.example
 
 # Build
 dist/
@@ -33,3 +35,5 @@ Thumbs.db
 .pytest_cache/
 .mypy_cache/
 .coverage
+# Local runtime data
+backend/data/scans.db

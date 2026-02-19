@@ -1,15 +1,18 @@
 {
   "name": "intelijob",
   "version": "3.0.0",
-  "description": "Personal cert research tool — analyzes job postings to rank cybersecurity certifications by employer demand",
-  "private": true,
+  "description": "Personal cert research tool \u2014 analyzes job postings to rank cybersecurity certifications by employer demand",
+  "private": false,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "check:fullstack": "npm run type-check && npm run build && python3 -m pytest backend/test_e2e.py"
+    "check:fullstack": "npm run type-check && npm run build && python3 -m pytest backend/test_e2e.py",
+    "start": "python3 scripts/dev_start.py",
+    "start:frontend": "npm run dev",
+    "start:backend": "cd backend && python3 start.py"
   },
   "author": "Jacob Macdonnell",
   "license": "MIT",
