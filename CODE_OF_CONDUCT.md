@@ -28,4 +28,4 @@ This Code of Conduct applies within project spaces and in public spaces when an 
 
 ## Reporting
 
-Report violations to `conduct@intelijob.local`.
+If you experience or witness unacceptable behavior, contact the maintainers through a private GitHub channel (for example, direct message or private discussion with a maintainer).
