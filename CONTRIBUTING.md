@@ -32,8 +32,9 @@ Great contribution types:
 
 ## Run locally
 
-- Frontend: `npm run dev`
-- Backend: `cd backend && python start.py`
+- Full app (recommended): `npm start`
+- Frontend only: `npm run start:frontend`
+- Backend only: `npm run start:backend`
 
 ## Validate changes
 

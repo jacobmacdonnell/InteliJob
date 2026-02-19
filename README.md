@@ -68,21 +68,29 @@ cp backend/.env.example backend/.env
 
 Set your `RAPIDAPI_KEY` in `backend/.env`.
 
-### 3) Run locally
+### 3) Run locally (simple)
 
-**Backend:**
 ```bash
-cd backend
-python start.py
+npm start
 ```
 
-**Frontend:**
-```bash
-npm run dev
-```
+This starts both backend and frontend together.
 
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:8000`
+- Stop everything with `Ctrl+C`
+
+### 3b) Run separately (optional)
+
+**Backend only:**
+```bash
+npm run start:backend
+```
+
+**Frontend only:**
+```bash
+npm run start:frontend
+```
 
 ### 4) Run checks
 
