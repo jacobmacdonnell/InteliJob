@@ -1,5 +1,6 @@
 import os
 
+
 class Settings:
     """App configuration — reads from env vars with sensible defaults."""
 
@@ -25,12 +26,15 @@ class Settings:
         self.max_scan_rows = int(os.getenv("MAX_SCAN_ROWS", "0"))
 
     def is_rapidapi_configured(self) -> bool:
-        return bool(self.rapidapi_key and self.rapidapi_key not in (
-            "your_rapidapi_key_here", "your_actual_rapidapi_key_here"
-        ))
+        return bool(
+            self.rapidapi_key
+            and self.rapidapi_key
+            not in ("your_rapidapi_key_here", "your_actual_rapidapi_key_here")
+        )
 
     def is_production(self) -> bool:
         """Whether the app is running in production mode."""
         return self.environment.lower() == "production"
+
 
 settings = Settings()

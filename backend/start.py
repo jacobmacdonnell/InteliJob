@@ -5,6 +5,7 @@ import sys
 import os
 from pathlib import Path
 
+
 def main():
     """Start the FastAPI server."""
     backend_dir = Path(__file__).parent
@@ -38,6 +39,7 @@ def main():
     print("=" * 40)
 
     uvicorn.run("main:app", host=host, port=port, reload=reload)
+
 
 if __name__ == "__main__":
     main()

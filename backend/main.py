@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -45,7 +46,8 @@ print(f"Environment: {ENVIRONMENT}")
 
 # Determine base path for bundled static files or dev environment
 import sys
-if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     # Running in PyInstaller bundle
     BASE_DIR = Path(sys._MEIPASS)
 else:
@@ -53,6 +55,7 @@ else:
     BASE_DIR = Path(__file__).parent.parent
 
 FRONTEND_DIST = BASE_DIR / "dist"
+
 
 # ── Pydantic Models ──────────────────────────────────────────────────────────
 class JobSearchRequest(BaseModel):
@@ -62,11 +65,13 @@ class JobSearchRequest(BaseModel):
     target_path: Optional[str] = None
     owned_certs: List[str] = Field(default_factory=list)
 
+
 class JobAnalysisResponse(BaseModel):
     success: bool
     message: str
     data: Optional[Dict[str, Any]] = None
     jobs_analyzed: int = 0
+
 
 # ── Config ───────────────────────────────────────────────────────────────────
 JSEARCH_API_URL = settings.jsearch_api_url
@@ -77,9 +82,13 @@ def _require_admin_access(x_admin_key: Optional[str]) -> None:
     """Require ADMIN_API_KEY for sensitive endpoints."""
     expected = settings.admin_api_key
     if not expected:
-        raise HTTPException(status_code=503, detail="Admin endpoints disabled: ADMIN_API_KEY not configured.")
+        raise HTTPException(
+            status_code=503,
+            detail="Admin endpoints disabled: ADMIN_API_KEY not configured.",
+        )
     if x_admin_key != expected:
         raise HTTPException(status_code=401, detail="Unauthorized")
+
 
 # ── Role Families (multi-query expansion) ────────────────────────────────────
 # When a user searches one title, we also query related titles to get broader coverage.
@@ -131,6 +140,7 @@ ROLE_FAMILIES: Dict[str, List[str]] = {
     ],
 }
 
+
 def get_search_queries(job_title: str) -> List[str]:
     """Get expanded search queries for a given job title."""
     # Check if it matches a known role family (case-insensitive)
@@ -178,8 +188,6 @@ def _parse_posted_datetime(job: Dict[str, Any]) -> Optional[datetime]:
     return None
 
 
-
-
 def _dedup_job_key(job: Dict[str, Any]) -> str:
     """Build a stable dedup key without collapsing distinct postings."""
     job_id = job.get("job_id")
@@ -194,10 +202,18 @@ def _dedup_job_key(job: Dict[str, Any]) -> str:
     title = job.get("job_title") or ""
     city = job.get("job_city") or ""
     state = job.get("job_state") or ""
-    posted = job.get("job_posted_at_datetime_utc") or job.get("job_posted_at_datetime") or job.get("job_posted_at_timestamp") or ""
+    posted = (
+        job.get("job_posted_at_datetime_utc")
+        or job.get("job_posted_at_datetime")
+        or job.get("job_posted_at_timestamp")
+        or ""
+    )
     return f"meta:{employer}|{title}|{city}|{state}|{posted}"
 
-def filter_jobs_by_time_range(jobs: List[Dict], time_range: Optional[str]) -> List[Dict]:
+
+def filter_jobs_by_time_range(
+    jobs: List[Dict], time_range: Optional[str]
+) -> List[Dict]:
     """Apply exact local time-range filtering for ranges not natively supported by JSearch."""
     if time_range not in TIME_RANGE_TO_DAYS:
         return jobs
@@ -239,6 +255,7 @@ DATA_DIR = Path.home() / ".intelijob" / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DB_PATH = DATA_DIR / "scans.db"
 
+
 def _get_db() -> sqlite3.Connection:
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
@@ -257,8 +274,15 @@ def _get_db() -> sqlite3.Connection:
     conn.commit()
     return conn
 
-def save_scan(job_title: str, location: Optional[str], time_range: str,
-              total_jobs: int, jobs_with_desc: int, cert_items: List[Dict]):
+
+def save_scan(
+    job_title: str,
+    location: Optional[str],
+    time_range: str,
+    total_jobs: int,
+    jobs_with_desc: int,
+    cert_items: List[Dict],
+):
     """Save a scan result to SQLite."""
     conn = _get_db()
     try:
@@ -279,10 +303,13 @@ def save_scan(job_title: str, location: Optional[str], time_range: str,
     finally:
         conn.close()
 
+
 def _apply_scan_retention(conn: sqlite3.Connection) -> None:
     """Prune old scan rows by age and by max-row limit."""
     if settings.scan_retention_days > 0:
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=settings.scan_retention_days)).isoformat()
+        cutoff = (
+            datetime.now(timezone.utc) - timedelta(days=settings.scan_retention_days)
+        ).isoformat()
         conn.execute("DELETE FROM scans WHERE timestamp < ?", (cutoff,))
 
     if settings.max_scan_rows > 0:
@@ -318,7 +345,13 @@ def get_scan_history(limit: int = 50) -> List[Dict]:
 
 # ── Job Fetching ─────────────────────────────────────────────────────────────
 
-async def fetch_jobs_single(client: httpx.AsyncClient, query: str, location: str = None, date_posted: str = "today") -> List[Dict]:
+
+async def fetch_jobs_single(
+    client: httpx.AsyncClient,
+    query: str,
+    location: str = None,
+    date_posted: str = "today",
+) -> List[Dict]:
     """Fetch job postings for a single query."""
     headers = {
         "X-RapidAPI-Key": RAPIDAPI_KEY,
@@ -338,7 +371,10 @@ async def fetch_jobs_single(client: httpx.AsyncClient, query: str, location: str
         print(f"Query '{query}' failed: {e}")
         return []
 
-async def fetch_jobs_expanded(job_title: str, location: str = None, date_posted: str = "today") -> tuple[List[Dict], List[str]]:
+
+async def fetch_jobs_expanded(
+    job_title: str, location: str = None, date_posted: str = "today"
+) -> tuple[List[Dict], List[str]]:
     """Fetch jobs using expanded queries, dedup, and return (jobs, queries_used)."""
     if not RAPIDAPI_KEY:
         raise HTTPException(status_code=500, detail="RAPIDAPI_KEY not configured.")
@@ -348,7 +384,9 @@ async def fetch_jobs_expanded(job_title: str, location: str = None, date_posted:
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             # Run all queries in parallel
-            tasks = [fetch_jobs_single(client, q, location, date_posted) for q in queries]
+            tasks = [
+                fetch_jobs_single(client, q, location, date_posted) for q in queries
+            ]
             results = await asyncio.gather(*tasks)
 
         # Merge and deduplicate by stable identity while preserving distinct postings.
@@ -371,15 +409,23 @@ async def fetch_jobs_expanded(job_title: str, location: str = None, date_posted:
 
 # ── Cert Extraction ──────────────────────────────────────────────────────────
 
+
 def clean_text(text: str) -> str:
     """Clean HTML and normalize whitespace."""
     if not text:
         return ""
-    text = re.sub(r'<[^>]+>', ' ', text)
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text)
     return text.strip()
 
-def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: str = None, job_key: Optional[str] = None) -> List[Dict]:
+
+def extract_certs(
+    text: str,
+    job_title: str,
+    company: str = "Unknown",
+    job_url: str = None,
+    job_key: Optional[str] = None,
+) -> List[Dict]:
     """Extract certifications using dictionary lookup."""
     certs = []
     text_lower = text.lower()
@@ -393,20 +439,23 @@ def extract_certs(text: str, job_title: str, company: str = "Unknown", job_url: 
         pattern = rf"(?<![a-z0-9]){escaped}(?![a-z0-9])"
         if re.search(pattern, text_lower):
             seen.add(canonical)
-            certs.append({
-                "name": canonical,
-                "full_name": info.get("full_name", canonical),
-                "org": info.get("org", ""),
-                "source_job": f"{job_title} at {company}",
-                "company": company,
-                "job_url": job_url,
-                "job_key": job_key or job_url or f"{job_title} at {company}",
-            })
+            certs.append(
+                {
+                    "name": canonical,
+                    "full_name": info.get("full_name", canonical),
+                    "org": info.get("org", ""),
+                    "source_job": f"{job_title} at {company}",
+                    "company": company,
+                    "job_url": job_url,
+                    "job_key": job_key or job_url or f"{job_title} at {company}",
+                }
+            )
 
     return certs
 
 
 # ── Ranking ──────────────────────────────────────────────────────────────────
+
 
 def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict]:
     """Rank certs by % of jobs mentioning them."""
@@ -425,11 +474,13 @@ def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict
                 "sources": [],
             }
         groups[name]["jobs"].add(item.get("job_key", item["source_job"]))
-        groups[name]["sources"].append({
-            "job": item["source_job"],
-            "company": item["company"],
-            "job_url": item.get("job_url"),
-        })
+        groups[name]["sources"].append(
+            {
+                "job": item["source_job"],
+                "company": item["company"],
+                "job_url": item.get("job_url"),
+            }
+        )
 
     sorted_groups = sorted(groups.values(), key=lambda x: len(x["jobs"]), reverse=True)
     if top_n:
@@ -446,19 +497,24 @@ def rank_certs(items: List[Dict], total_jobs: int, top_n: int = 15) -> List[Dict
                 seen.add(key)
 
         job_count = len(g["jobs"])
-        ranked.append({
-            "name": g["name"],
-            "full_name": g["full_name"],
-            "org": g["org"],
-            "count": job_count,
-            "percentage": round((job_count / total_jobs) * 100, 1) if total_jobs > 0 else 0,
-            "sources": unique_sources[:5],
-        })
+        ranked.append(
+            {
+                "name": g["name"],
+                "full_name": g["full_name"],
+                "org": g["org"],
+                "count": job_count,
+                "percentage": round((job_count / total_jobs) * 100, 1)
+                if total_jobs > 0
+                else 0,
+                "sources": unique_sources[:5],
+            }
+        )
 
     return ranked
 
 
 # ── Insights ─────────────────────────────────────────────────────────────────
+
 
 def compute_title_distribution(jobs: List[Dict]) -> List[Dict]:
     """Count job title variations in results (case/spacing normalized)."""
@@ -477,14 +533,19 @@ def compute_title_distribution(jobs: List[Dict]) -> List[Dict]:
     total = sum(titles.values())
     dist = []
     for norm, count in titles.most_common(8):
-        dist.append({
-            "title": canonical_display.get(norm, norm),
-            "count": count,
-            "percentage": round((count / total) * 100, 1) if total > 0 else 0,
-        })
+        dist.append(
+            {
+                "title": canonical_display.get(norm, norm),
+                "count": count,
+                "percentage": round((count / total) * 100, 1) if total > 0 else 0,
+            }
+        )
     return dist
 
-def compute_cert_pairs(all_certs_per_job: List[List[str]], total_jobs: int) -> List[Dict]:
+
+def compute_cert_pairs(
+    all_certs_per_job: List[List[str]], total_jobs: int
+) -> List[Dict]:
     """Find the most common cert pairs across jobs."""
     pair_counter = Counter()
     for job_certs in all_certs_per_job:
@@ -496,15 +557,20 @@ def compute_cert_pairs(all_certs_per_job: List[List[str]], total_jobs: int) -> L
     pairs = []
     for (a, b), count in pair_counter.most_common(5):
         if count >= 2:  # Only show pairs that appear in 2+ jobs
-            pairs.append({
-                "certs": [a, b],
-                "count": count,
-                "percentage": round((count / total_jobs) * 100, 1) if total_jobs > 0 else 0,
-            })
+            pairs.append(
+                {
+                    "certs": [a, b],
+                    "count": count,
+                    "percentage": round((count / total_jobs) * 100, 1)
+                    if total_jobs > 0
+                    else 0,
+                }
+            )
     return pairs
 
 
 # ── API Routes ───────────────────────────────────────────────────────────────
+
 
 @app.get("/")
 @limiter.exempt
@@ -518,15 +584,25 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
     """Analyze job postings for certification demand."""
     try:
         # JSearch supports: today, 3days, week, month, all
-        date_map = {"1d": "today", "3d": "3days", "7d": "week", "14d": "month", "30d": "month"}
+        date_map = {
+            "1d": "today",
+            "3d": "3days",
+            "7d": "week",
+            "14d": "month",
+            "30d": "month",
+        }
         date_posted = date_map.get(payload.time_range, "today")
 
         # Multi-query expansion
-        jobs, queries_used = await fetch_jobs_expanded(payload.job_title, payload.location, date_posted)
+        jobs, queries_used = await fetch_jobs_expanded(
+            payload.job_title, payload.location, date_posted
+        )
         jobs = filter_jobs_by_time_range(jobs, payload.time_range)
 
         if not jobs:
-            return JobAnalysisResponse(success=False, message="No jobs found", jobs_analyzed=0)
+            return JobAnalysisResponse(
+                success=False, message="No jobs found", jobs_analyzed=0
+            )
 
         # Extract certs from all job descriptions
         all_certs = []
@@ -592,13 +668,16 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
     except Exception as e:
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Unexpected error during analysis.")
 
 
 @app.get("/history")
 @limiter.exempt
-async def scan_history(limit: int = 50, x_admin_key: Optional[str] = Header(default=None)):
+async def scan_history(
+    limit: int = 50, x_admin_key: Optional[str] = Header(default=None)
+):
     """Return saved scan history for trend tracking."""
     _require_admin_access(x_admin_key)
     try:
@@ -657,16 +736,24 @@ async def aggregate_stats(x_admin_key: Optional[str] = Header(default=None)):
         # Build all-time rankings
         all_time = []
         for ct in cert_totals.values():
-            avg_pct = round(sum(ct["percentages"]) / len(ct["percentages"]), 1) if ct["percentages"] else 0
-            all_time.append({
-                "name": ct["name"],
-                "full_name": ct["full_name"],
-                "org": ct["org"],
-                "total_mentions": ct["total_mentions"],
-                "scans_appeared": ct["scans_appeared"],
-                "avg_percentage": avg_pct,
-                "latest_percentage": ct["percentages"][-1] if ct["percentages"] else 0,
-            })
+            avg_pct = (
+                round(sum(ct["percentages"]) / len(ct["percentages"]), 1)
+                if ct["percentages"]
+                else 0
+            )
+            all_time.append(
+                {
+                    "name": ct["name"],
+                    "full_name": ct["full_name"],
+                    "org": ct["org"],
+                    "total_mentions": ct["total_mentions"],
+                    "scans_appeared": ct["scans_appeared"],
+                    "avg_percentage": avg_pct,
+                    "latest_percentage": ct["percentages"][-1]
+                    if ct["percentages"]
+                    else 0,
+                }
+            )
         all_time.sort(key=lambda x: x["avg_percentage"], reverse=True)
 
         # Top certs for trend tracking (the top 8 by avg %)
@@ -700,20 +787,21 @@ async def health_check():
         "version": "3.0.0",
     }
 
+
 # ── Serve Frontend ───────────────────────────────────────────────────────────
 if FRONTEND_DIST.exists() and FRONTEND_DIST.is_dir():
     # Mount the assets directory explicitly
     assets_dir = FRONTEND_DIST / "assets"
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-        
+
     @app.get("/{full_path:path}")
     @limiter.exempt
     async def serve_frontend(full_path: str):
         # Prevent directory traversal
         if ".." in full_path:
             raise HTTPException(status_code=400, detail="Invalid path")
-            
+
         file_path = FRONTEND_DIST / full_path
         if file_path.is_file():
             return FileResponse(file_path)
@@ -725,4 +813,5 @@ else:
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

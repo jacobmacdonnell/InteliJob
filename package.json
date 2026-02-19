@@ -1,7 +1,7 @@
 {
   "name": "intelijob",
   "version": "3.0.0",
-  "description": "Personal cert research tool \u2014 analyzes job postings to rank cybersecurity certifications by employer demand",
+  "description": "Personal cert research tool — analyzes job postings to rank cybersecurity certifications by employer demand",
   "private": false,
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "check:fullstack": "npm run type-check && npm run build && python3 -m pytest backend/tests/test_e2e.py",
+    "check:fullstack": "npm run lint:frontend && npm run type-check && npm run build && python -m pytest backend/tests/test_e2e.py",
+    "lint:frontend": "eslint .",
     "dev:frontend": "npm run dev",
     "dev:backend": "cd backend && python start.py"
   },
@@ -27,11 +28,17 @@
     "react-icons": "^5.5.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^5.1.4",
+    "eslint": "^10.0.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.0",
+    "globals": "^17.3.0",
     "typescript": "~5.7.2",
+    "typescript-eslint": "^8.56.0",
     "vite": "^6.2.0"
   }
 }
