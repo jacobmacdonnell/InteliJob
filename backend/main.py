@@ -24,7 +24,7 @@ from slowapi.errors import RateLimitExceeded
 from config import settings
 
 # ── App Setup ────────────────────────────────────────────────────────────────
-app = FastAPI(title="InteliJob API", version="3.0.0")
+app = FastAPI(title="InteliJob API", version="1.0.0")
 
 limiter = Limiter(
     key_func=get_remote_address,
@@ -570,7 +570,7 @@ def compute_cert_pairs(
 @app.get("/")
 @limiter.exempt
 async def root():
-    return {"message": "InteliJob API", "version": "3.0.0"}
+    return {"message": "InteliJob API", "version": "1.0.0"}
 
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
@@ -779,7 +779,7 @@ async def health_check():
         "rapidapi_configured": bool(RAPIDAPI_KEY),
         "certs_loaded": len(CERT_DICTIONARY),
         "role_families": len(ROLE_FAMILIES),
-        "version": "3.0.0",
+        "version": "1.0.0",
     }
 
 
