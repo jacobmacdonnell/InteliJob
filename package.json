@@ -1,6 +1,6 @@
 {
   "name": "intelijob",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "description": "Personal cert research tool — analyzes job postings to rank cybersecurity certifications by employer demand",
   "private": false,
   "type": "module",
