@@ -33,3 +33,5 @@ Thumbs.db
 .pytest_cache/
 .mypy_cache/
 .coverage
+# Local runtime data
+backend/data/scans.db

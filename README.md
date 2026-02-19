@@ -2,89 +2,111 @@
 
 **Find out which certifications employers actually want.**
 
-A personal job market research tool that scans live job postings and ranks certifications, skills, and requirements by how often they appear — so you know exactly what to pursue for your career.
+InteliJob is a job market research tool that scans live job postings and ranks certifications, skills, and requirements by employer demand. It is designed to help cybersecurity professionals make data-informed decisions about what to study next.
 
 ---
 
-## ✨ What It Does
+## ✨ Features
 
-1. **Search** — Enter a job title (e.g., "Cybersecurity Analyst") and optional location
-2. **Analyze** — Scans ~100 live job postings via the JSearch API
-3. **Rank** — Extracts and ranks certifications, skills, and education by demand, with links back to source job posts
+- Multi-title search expansion for common cybersecurity role families
+- Certification extraction and ranking from job descriptions
+- Time-range filtering and trend/history views
+- Protected admin endpoints for scan history and statistics
+- Local SQLite persistence with optional retention controls
+
+---
+
+## 🧰 Tech Stack
+
+- **Frontend:** React 18, TypeScript, Chakra UI, Vite
+- **Backend:** FastAPI, SQLite, regex-based extraction (+ optional spaCy)
+- **Data source:** RapidAPI JSearch API
 
 ---
 
 ## 🚀 Quick Start
 
-### Local Development
+### Prerequisites
 
-**Prerequisites:**
-- Node.js 16+ and npm
+- Node.js 18+ and npm
 - Python 3.9+
 
-**Frontend:**
+### 1) Install dependencies
+
 ```bash
 npm install
-npm run dev
-# Visit http://localhost:5173
+cd backend && pip install -r requirements.txt
 ```
+
+### 2) Configure environment variables
+
+```bash
+cp .env.example .env.local
+cp backend/.env.example backend/.env
+```
+
+Set your `RAPIDAPI_KEY` in `backend/.env`.
+
+### 3) Run locally
 
 **Backend:**
 ```bash
 cd backend
-pip install -r requirements.txt
 python start.py
-# API at http://localhost:8000
 ```
 
-**Full-stack checks:**
+**Frontend:**
+```bash
+npm run dev
+```
+
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8000`
+
+### 4) Run full checks
+
 ```bash
 npm run check:fullstack
 ```
 
-**Environment Variables:**
-- `RAPIDAPI_KEY` — Required for live job data (get one at [RapidAPI JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch))
-- `VITE_API_BASE_URL` — Frontend API endpoint (default: `http://localhost:8000`)
-- `ADMIN_API_KEY` — Required for backend `/history` and `/stats` access
-- `VITE_ADMIN_API_KEY` — Optional frontend header value for calling protected `/history` and `/stats`
-- `SCAN_RETENTION_DAYS` — Optional backend retention window in days (default: `0` = keep all by age)
-- `MAX_SCAN_ROWS` — Optional backend cap on persisted scans (default: `0` = no row cap)
-- `HOST` — Backend bind host (default: `127.0.0.1` for local-only safety; set `0.0.0.0` only if you need LAN/container access)
-- `CORS_ORIGINS` — Optional comma-separated allowed frontend origins for backend CORS (default: `http://localhost:5173,http://localhost:3000`)
+---
 
-**`.env` file locations (local setup):**
-- Put backend-only variables in `backend/.env` (`RAPIDAPI_KEY`, `ADMIN_API_KEY`, `SCAN_RETENTION_DAYS`, `MAX_SCAN_ROWS`).
-- Put frontend variables in root `.env.local` (`VITE_API_BASE_URL`, optional `VITE_ADMIN_API_KEY`).
+## ⚙️ Environment Variables
 
-**Admin key note:**
-- If the frontend directly calls `/history` and `/stats`, `VITE_ADMIN_API_KEY` must match backend `ADMIN_API_KEY`.
-- Using different values will return `401 Unauthorized` for those frontend requests.
-- `VITE_*` values are visible in the browser bundle, so this is suitable for local/personal use only.
+### Backend (`backend/.env`)
 
-**Trend-history tuning:**
-- By default, retention is disabled so all scan history is kept locally.
-- If you want storage guardrails later, set `SCAN_RETENTION_DAYS` and/or `MAX_SCAN_ROWS` to non-zero values (for example `730` and `50000`).
+- `RAPIDAPI_KEY` (required for live data)
+- `ADMIN_API_KEY` (required to enable `/history` and `/stats`)
+- `SCAN_RETENTION_DAYS` (optional, `0` disables age pruning)
+- `MAX_SCAN_ROWS` (optional, `0` disables row-cap pruning)
+- `HOST` (default `127.0.0.1`)
+- `PORT` (default `8000`)
+- `CORS_ORIGINS` (comma-separated allowed origins)
+
+### Frontend (`.env.local`)
+
+- `VITE_API_BASE_URL` (default local backend URL)
+- `VITE_ADMIN_API_KEY` (optional)
+
+> `VITE_*` values are bundled into client-side JavaScript and are visible to users. Do not place sensitive secrets there.
 
 ---
 
-## 🛠️ Tech Stack
+## 🔐 Security Notes for Public/Open-Source Use
 
-- **Frontend:** React 18 + TypeScript + Chakra UI + Vite
-- **Backend:** FastAPI + regex-based extraction + spaCy (optional NLP)
-- **Data Source:** JSearch API (RapidAPI)
-- **Deployment:** Netlify (frontend) + Render (backend)
+- Never commit `.env` files or API keys
+- Local scan DB (`backend/data/scans.db`) is intentionally git-ignored
+- Use `ADMIN_API_KEY` for protected endpoints
+- For responsible disclosure, see [SECURITY.md](SECURITY.md)
 
 ---
 
-## 📊 Example Searches
+## 🤝 Contributing
 
-- "Cybersecurity Analyst" — see which security certs are most in demand
-- "SOC Analyst" — compare cert requirements vs cybersecurity analyst
-- "Cloud Security Engineer" — find cloud-specific cert demand
-- "Security Engineer" in "Remote" — remote-specific requirements
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
 ## 📄 License
 
-MIT License
+MIT — see [LICENSE](LICENSE)
