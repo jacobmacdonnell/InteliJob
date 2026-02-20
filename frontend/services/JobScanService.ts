@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { JobCriteria, ReportData, ScanHistoryEntry, AggregateStats } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY;
+
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -78,9 +78,7 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
 
 export const fetchHistory = async (): Promise<ScanHistoryEntry[]> => {
   try {
-    const response = await api.get('/history', {
-      headers: ADMIN_API_KEY ? { 'X-Admin-Key': ADMIN_API_KEY } : undefined,
-    });
+    const response = await api.get('/history');
     return response.data.history || [];
   } catch (error) {
     console.error('Failed to load history:', error);
@@ -92,9 +90,7 @@ export const fetchHistory = async (): Promise<ScanHistoryEntry[]> => {
 
 export const fetchStats = async (): Promise<AggregateStats | null> => {
   try {
-    const response = await api.get('/stats', {
-      headers: ADMIN_API_KEY ? { 'X-Admin-Key': ADMIN_API_KEY } : undefined,
-    });
+    const response = await api.get('/stats');
     return response.data.stats || null;
   } catch (error) {
     console.error('Failed to load stats:', error);

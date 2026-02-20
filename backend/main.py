@@ -665,11 +665,8 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
 
 @app.get("/history")
 @limiter.exempt
-async def scan_history(
-    limit: int = 50, x_admin_key: Optional[str] = Header(default=None)
-):
+async def scan_history(limit: int = 50):
     """Return saved scan history for trend tracking."""
-    _require_admin_access(x_admin_key)
     try:
         history = get_scan_history(limit)
         return {"history": history}
@@ -679,9 +676,8 @@ async def scan_history(
 
 @app.get("/stats")
 @limiter.exempt
-async def aggregate_stats(x_admin_key: Optional[str] = Header(default=None)):
+async def aggregate_stats():
     """Aggregate all scan data into all-time stats and trends."""
-    _require_admin_access(x_admin_key)
     try:
         conn = _get_db()
         rows = conn.execute("SELECT * FROM scans ORDER BY timestamp ASC").fetchall()
