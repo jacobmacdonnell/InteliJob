@@ -161,7 +161,7 @@ function buildTrendSummary(stats: AggregateStats | null, selectedRole: string): 
 
 const EmptyState: React.FC = () => {
     const muted = useColorModeValue('gray.500', 'gray.400');
-    return <Box textAlign="center" py={12}><Icon as={FaShieldAlt} w={10} h={10} color="gray.300" mb={3} /><Heading size="sm" color={muted} mb={1}>No scan data yet</Heading><Text fontSize="sm" color={muted}>Run some scans on the Scan tab to build up your stats.</Text></Box>;
+    return <Box textAlign="center" py={12}><Icon as={FaShieldAlt} w={10} h={10} color="gray.300" mb={3} /><Heading size="sm" color={muted} mb={1}>No scan data yet</Heading><Text fontSize="sm" color={muted}>Run some scans to build up your trends.</Text></Box>;
 };
 
 const CertRankingCard: React.FC<{ certs: CertItem[] }> = ({ certs }) => {

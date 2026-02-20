@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { JobScanProvider } from './contexts/JobScanContext';
 import ToolPage from './components/ToolPage';
@@ -6,16 +6,19 @@ import StatsPage from './components/StatsPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
+type TabView = 'scan' | 'trends';
+
 const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<TabView>('scan');
+
   return (
     <JobScanProvider>
       <Box minH="100vh" display="flex" flexDirection="column">
-        <Header />
+        <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
         <Box flex="1">
-          <ToolPage />
-          <Box borderTopWidth="1px" borderColor="gray.200" _dark={{ borderColor: 'gray.700' }} />
-          <StatsPage />
+          {activeTab === 'scan' && <ToolPage />}
+          {activeTab === 'trends' && <StatsPage />}
         </Box>
 
         <Footer />
