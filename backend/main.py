@@ -16,7 +16,16 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
-load_dotenv()
+def _load_env_for_exe():
+    """When frozen, load .env from the directory containing the .exe."""
+    if getattr(sys, "frozen", False):
+        exe_dir = Path(sys.executable).parent
+        env_path = exe_dir / ".env"
+        load_dotenv(dotenv_path=env_path)
+    else:
+        load_dotenv()
+
+_load_env_for_exe()
 
 
 from config import settings  # noqa: E402
