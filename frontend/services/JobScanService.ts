@@ -22,15 +22,6 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
       owned_certs: criteria.owned_certs || [],
     });
 
-    const remainingHeader = response.headers['x-ratelimit-remaining'];
-    const remaining = remainingHeader !== undefined ? parseInt(remainingHeader, 10) : undefined;
-    if (remaining !== undefined && !Number.isNaN(remaining)) {
-      localStorage.setItem('rateLimitRemaining', String(remaining));
-      window.dispatchEvent(new CustomEvent('rateLimitUpdate', { detail: { remaining } }));
-      if (remaining <= 5) {
-        window.dispatchEvent(new CustomEvent('rateLimitWarning', { detail: { remaining } }));
-      }
-    }
 
     if (!response.data.success) {
       throw new Error(response.data.message || 'Analysis failed');
@@ -50,7 +41,6 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
         total_jobs_found: d.total_jobs_found,
         jobs_with_descriptions: d.jobs_with_descriptions,
         queries_used: d.queries_used || [],
-        rate_limit_remaining: remaining,
         search_criteria: d.search_criteria,
       },
       title_distribution: d.title_distribution || [],
@@ -63,8 +53,7 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
 
       if (status === 408) throw new Error('Request timeout — try again.');
       if (status === 429) {
-        window.dispatchEvent(new CustomEvent('rateLimitWarning', { detail: { remaining: 0 } }));
-        throw new Error('Rate limit exceeded. Wait a moment.');
+        throw new Error(msg || 'Rate limit exceeded. Wait a moment.');
       }
       if (status === 500) throw new Error('Server error. Try again later.');
       if (!error.response) throw new Error('Cannot connect to backend. Is it running?');

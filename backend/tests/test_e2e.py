@@ -285,34 +285,7 @@ def test_analyze_rejects_invalid_time_range(client: TestClient) -> None:
     assert response.status_code == 422
 
 
-def test_history_requires_admin_key(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(main.settings, "admin_api_key", "secret")
 
-    response = client.get("/history")
-
-    assert response.status_code == 401
-
-
-def test_stats_requires_admin_key(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(main.settings, "admin_api_key", "secret")
-
-    response = client.get("/stats")
-
-    assert response.status_code == 401
-
-
-def test_history_allows_valid_admin_key(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(main.settings, "admin_api_key", "secret")
-
-    response = client.get("/history", headers={"X-Admin-Key": "secret"})
-
-    assert response.status_code == 200
 
 
 def test_analyze_echoes_personalization_fields(

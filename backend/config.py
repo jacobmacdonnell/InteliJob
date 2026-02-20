@@ -14,12 +14,7 @@ class Settings:
         self.jsearch_api_url = "https://jsearch.p.rapidapi.com/search"
         self.jsearch_api_host = "jsearch.p.rapidapi.com"
 
-        # Rate limiting
-        self.rate_limit_default = os.getenv("RATE_LIMIT_DEFAULT", "100/minute")
-        self.rate_limit_strategy = os.getenv("RATE_LIMIT_STRATEGY", "moving-window")
-
-        # Admin/auth for protected endpoints
-        self.admin_api_key = os.getenv("ADMIN_API_KEY")
+        # Admin/auth for protected endpoints (Removed for personal usetool)
 
         # Scan retention limits
         self.scan_retention_days = int(os.getenv("SCAN_RETENTION_DAYS", "0"))

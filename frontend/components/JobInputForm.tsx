@@ -27,7 +27,7 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
   const [timeRange, setTimeRange] = useState(TIME_RANGE_OPTIONS[0].value);
   const [ownedCertsInput, setOwnedCertsInput] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
+
 
   const labelColor = useColorModeValue('gray.600', 'gray.400');
   const inputBg = useColorModeValue('white', 'gray.700');
@@ -45,26 +45,7 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('rateLimitRemaining');
-    if (saved) {
-      const parsed = parseInt(saved, 10);
-      if (!Number.isNaN(parsed)) setRemainingRequests(parsed);
-    }
 
-    const handleRateUpdate = (event: Event) => {
-      const e = event as CustomEvent<{ remaining: number }>;
-      if (typeof e.detail?.remaining === 'number') setRemainingRequests(e.detail.remaining);
-    };
-
-    window.addEventListener('rateLimitUpdate', handleRateUpdate as EventListener);
-    window.addEventListener('rateLimitWarning', handleRateUpdate as EventListener);
-
-    return () => {
-      window.removeEventListener('rateLimitUpdate', handleRateUpdate as EventListener);
-      window.removeEventListener('rateLimitWarning', handleRateUpdate as EventListener);
-    };
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,11 +151,7 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
           </Text>
         </FormControl>
 
-        {remainingRequests !== null && (
-          <Text fontSize="xs" color={muted}>
-            API quota remaining: <strong>{remainingRequests}</strong>
-          </Text>
-        )}
+
 
         <Button
           type="submit" colorScheme="teal" size="lg"

@@ -18,21 +18,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from slowapi import Limiter, _rate_limit_exceeded_handler  # noqa: E402
-from slowapi.util import get_remote_address  # noqa: E402
-from slowapi.errors import RateLimitExceeded  # noqa: E402
+
 from config import settings  # noqa: E402
 
 # ── App Setup ────────────────────────────────────────────────────────────────
 app = FastAPI(title="InteliJob API", version="1.0.0")
-
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=[settings.rate_limit_default],
-    strategy=settings.rate_limit_strategy,
-)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -362,6 +352,14 @@ async def fetch_jobs_single(
         response = await client.get(JSEARCH_API_URL, headers=headers, params=params)
         response.raise_for_status()
         return response.json().get("data", [])
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 429:
+            raise HTTPException(
+                status_code=429,
+                detail="RapidAPI quota exhausted. Please wait until your limit resets."
+            )
+        print(f"Query '{query}' failed: {e}")
+        return []
     except Exception as e:
         print(f"Query '{query}' failed: {e}")
         return []
@@ -569,8 +567,7 @@ def compute_cert_pairs(
 
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
-@limiter.limit(settings.rate_limit_default)
-async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
+async def analyze_jobs(payload: JobSearchRequest = Body(...)):
     """Analyze job postings for certification demand."""
     try:
         # JSearch supports: today, 3days, week, month, all
@@ -664,7 +661,6 @@ async def analyze_jobs(request: Request, payload: JobSearchRequest = Body(...)):
 
 
 @app.get("/history")
-@limiter.exempt
 async def scan_history(limit: int = 50):
     """Return saved scan history for trend tracking."""
     try:
@@ -675,7 +671,6 @@ async def scan_history(limit: int = 50):
 
 
 @app.get("/stats")
-@limiter.exempt
 async def aggregate_stats():
     """Aggregate all scan data into all-time stats and trends."""
     try:
@@ -762,7 +757,6 @@ async def aggregate_stats():
 
 
 @app.get("/health")
-@limiter.exempt
 async def health_check():
     return {
         "status": "healthy",
@@ -782,7 +776,6 @@ if FRONTEND_DIST.exists() and FRONTEND_DIST.is_dir():
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     @app.get("/{full_path:path}")
-    @limiter.exempt
     async def serve_frontend(full_path: str):
         # Prevent directory traversal
         if ".." in full_path:

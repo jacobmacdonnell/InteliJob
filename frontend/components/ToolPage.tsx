@@ -9,7 +9,7 @@ import { JobInputForm } from './JobInputForm';
 import { JobReportCard } from './JobReportCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
-import { RateLimitNotification } from './RateLimitNotification';
+
 import ScanDetailModal from './ScanDetailModal';
 import { useJobScan } from '../contexts/JobScanContext';
 import type { ScanHistoryEntry } from '../types';
@@ -159,7 +159,7 @@ const ToolPage: React.FC = () => {
 
   return (
     <Box bg={pageBg}>
-      <RateLimitNotification />
+
 
       <Container as="main" maxW="3xl" w="full" py={6} px={{ base: 4, sm: 6 }}>
         <VStack spacing={4} align="stretch">

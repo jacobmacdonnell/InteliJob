@@ -42,7 +42,6 @@ export interface ReportData {
     total_jobs_found: number;
     jobs_with_descriptions: number;
     queries_used: string[];
-    rate_limit_remaining?: number;
     search_criteria: {
       job_title: string;
       location?: string;
