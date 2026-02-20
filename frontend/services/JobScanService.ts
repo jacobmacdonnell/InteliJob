@@ -55,9 +55,8 @@ export const fetchReport = async (criteria: JobCriteria): Promise<ReportData> =>
       if (status === 429) {
         throw new Error(msg || 'Rate limit exceeded. Wait a moment.');
       }
-      if (status === 500) throw new Error('Server error. Try again later.');
       if (!error.response) throw new Error('Cannot connect to backend. Is it running?');
-      throw new Error(`Analysis failed (${status}): ${msg}`);
+      throw new Error(msg || `Analysis failed (${status})`);
     }
     throw new Error(error.message || 'Unexpected error during analysis.');
   }

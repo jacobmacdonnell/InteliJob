@@ -370,7 +370,10 @@ async def fetch_jobs_expanded(
 ) -> tuple[List[Dict], List[str]]:
     """Fetch jobs using expanded queries, dedup, and return (jobs, queries_used)."""
     if not RAPIDAPI_KEY:
-        raise HTTPException(status_code=500, detail="RAPIDAPI_KEY not configured.")
+        raise HTTPException(
+            status_code=401,
+            detail="Missing RapidAPI Key! Please create a .env file in the same folder as InteliJob.exe with your RAPIDAPI_KEY=... to scan."
+        )
 
     queries = get_search_queries(job_title)
 
