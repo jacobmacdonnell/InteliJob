@@ -567,11 +567,6 @@ def compute_cert_pairs(
 # ── API Routes ───────────────────────────────────────────────────────────────
 
 
-@app.get("/")
-@limiter.exempt
-async def root():
-    return {"message": "InteliJob API", "version": "1.0.0"}
-
 
 @app.post("/analyze-jobs", response_model=JobAnalysisResponse)
 @limiter.limit(settings.rate_limit_default)
