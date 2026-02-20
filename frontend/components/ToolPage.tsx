@@ -158,7 +158,7 @@ const ToolPage: React.FC = () => {
   };
 
   return (
-    <Box minH="100vh" bg={pageBg}>
+    <Box bg={pageBg}>
       <RateLimitNotification />
 
       <Container as="main" maxW="3xl" w="full" py={6} px={{ base: 4, sm: 6 }}>

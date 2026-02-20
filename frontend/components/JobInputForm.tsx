@@ -21,13 +21,10 @@ const POPULAR_SEARCHES = [
   'GRC Analyst',
 ];
 
-const TARGET_PATH_OPTIONS = ['General Security', 'SOC', 'Cloud Security', 'GRC', 'Offensive Security'];
-
 export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading }) => {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [timeRange, setTimeRange] = useState(TIME_RANGE_OPTIONS[0].value);
-  const [targetPath, setTargetPath] = useState('General Security');
   const [ownedCertsInput, setOwnedCertsInput] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
@@ -81,12 +78,9 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
       job_title: title.trim(),
       location: location.trim() || undefined,
       time_range: timeRange,
-      target_path: targetPath,
       owned_certs: ownedCerts,
     });
   };
-
-  const handleQuickFill = (term: string) => setTitle(term);
 
   return (
     <Box as="form" onSubmit={handleSubmit}>
@@ -112,7 +106,7 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
               <Tag
                 size="sm" variant={title === search ? 'solid' : 'outline'} colorScheme="teal"
                 cursor="pointer"
-                onClick={() => handleQuickFill(search)}
+                onClick={() => setTitle(search)}
                 _hover={{ bg: title === search ? undefined : 'teal.50', color: title === search ? undefined : 'teal.700' }}
                 transition="all 0.15s"
               >
@@ -158,35 +152,27 @@ export const JobInputForm: React.FC<JobInputFormProps> = ({ onSubmit, isLoading 
           </FormControl>
         </HStack>
 
-        <HStack spacing={3} align="start">
-          <FormControl flex={1}>
-            <FormLabel color={labelColor} fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-              Target Path
-            </FormLabel>
-            <Select value={targetPath} onChange={(e) => setTargetPath(e.target.value)} bg={inputBg} color={inputText} borderColor={borderColor}>
-              {TARGET_PATH_OPTIONS.map(path => (
-                <option key={path} value={path} style={{ backgroundColor: optionBg, color: optionColor }}>{path}</option>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl flex={2}>
-            <FormLabel color={labelColor} fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
-              Certs You Already Have
-            </FormLabel>
-            <Input
-              value={ownedCertsInput}
-              onChange={(e) => setOwnedCertsInput(e.target.value)}
-              placeholder="Optional — Security+, AZ-500"
-              bg={inputBg} color={inputText} borderColor={borderColor}
-              _placeholder={{ color: placeholderColor }}
-              size="md" fontSize="sm" borderRadius="md"
-            />
-          </FormControl>
-        </HStack>
+        <FormControl>
+          <FormLabel color={labelColor} fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+            Certs You Already Have
+          </FormLabel>
+          <Input
+            value={ownedCertsInput}
+            onChange={(e) => setOwnedCertsInput(e.target.value)}
+            placeholder="Optional — Security+, AZ-500, etc."
+            bg={inputBg} color={inputText} borderColor={borderColor}
+            _placeholder={{ color: placeholderColor }}
+            size="md" fontSize="sm" borderRadius="md"
+            _focus={{ borderColor: 'teal.400', boxShadow: '0 0 0 1px var(--chakra-colors-teal-400)' }}
+          />
+          <Text fontSize="xs" color={muted} mt={1}>
+            Already earned? These get highlighted in your results.
+          </Text>
+        </FormControl>
 
         {remainingRequests !== null && (
           <Text fontSize="xs" color={muted}>
-            API quota remaining in current limit window: <strong>{remainingRequests}</strong>
+            API quota remaining: <strong>{remainingRequests}</strong>
           </Text>
         )}
 

@@ -205,10 +205,10 @@ const StatsPage: React.FC = () => {
     const risingCerts = certMomentum.filter(c => c.delta > 0).slice(0, 5);
     const trendSummary = useMemo(() => buildTrendSummary(stats || null, selectedRole), [stats, selectedRole]);
 
-    if (historyLoading) return <Box minH="100vh" bg={pageBg}><Container maxW="3xl" py={8}><Flex justify="center" py={12}><Text color={muted}>Loading stats...</Text></Flex></Container></Box>;
+    if (historyLoading) return <Box bg={pageBg}><Container maxW="3xl" py={8}><Flex justify="center" py={12}><Text color={muted}>Loading stats...</Text></Flex></Container></Box>;
 
     return (
-        <Box minH="100vh" bg={pageBg}>
+        <Box bg={pageBg}>
             <Container maxW="3xl" w="full" py={6} px={{ base: 4, sm: 6 }}>
                 <VStack spacing={4} align="stretch">
                     <Box bg={cardBg} p={5} borderRadius="xl" borderWidth="1px" borderColor={cardBorder} boxShadow="sm"><VStack spacing={4} align="stretch"><Heading size="md" color={titleColor}>Cert Demand Stats</Heading><HStack spacing={3}><Text fontSize="sm" color={muted} flexShrink={0}>Filter by role:</Text><Select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} bg={inputBg} borderColor={selectBorder} size="md" fontSize="sm" borderRadius="md" _focus={{ borderColor: 'teal.400', boxShadow: '0 0 0 1px var(--chakra-colors-teal-400)' }}><option value="__all__" style={{ backgroundColor: optionBg, color: optionColor }}>All Roles Combined</option>{roleOptions.map(title => <option key={title} value={title} style={{ backgroundColor: optionBg, color: optionColor }}>{title}</option>)}</Select></HStack></VStack></Box>
