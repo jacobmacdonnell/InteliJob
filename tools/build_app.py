@@ -48,7 +48,6 @@ def main():
         "fastapi",
         "pydantic",
         "httpx",
-        "slowapi",
         "dotenv",
         "sqlite3",
         "config",

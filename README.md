@@ -11,10 +11,12 @@ InteliJob scans live job postings and ranks certifications by real employer dema
 **Just download and run — no install required.**
 
 1. Grab `InteliJob.exe` from the [Releases](https://github.com/JacobMacdonnell/InteliJob/releases) page
-2. Double-click it
-3. Your browser opens automatically to `http://localhost:8000`
-
-> You'll need a free [RapidAPI](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) key to run live scans. Enter it in the app when prompted.
+2. Create a `.env` file in the same folder as the `.exe` containing your free [RapidAPI JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) key:
+   ```env
+   RAPIDAPI_KEY=your_key_here
+   ```
+3. Double-click `InteliJob.exe`
+4. Your browser will open automatically to `http://localhost:8000`
 
 ---
 
@@ -75,13 +77,11 @@ tools/          → Build script + lint config (dev-only)
 
 ## ⚙️ Config
 
-All config lives in `backend/.env` (copy from `backend/.env.example`):
+All config lives in `.env` (copy from `backend/.env.example` when building from source). Place this file directly next to `InteliJob.exe` if running the standalone release.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `RAPIDAPI_KEY` | **Yes** | Your JSearch API key |
-| `ADMIN_API_KEY` | No | Protects `/history` and `/stats` |
-| `PORT` | No | Server port (default `8000`) |
+| `RAPIDAPI_KEY` | **Yes** | Your [JSearch API](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) key |
 
 ---
 
