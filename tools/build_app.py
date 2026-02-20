@@ -32,16 +32,44 @@ def main():
     # Add certs.json.
     add_certs = f"{BACKEND / 'certs.json'}{separator}."
     
+    # Hidden imports PyInstaller can't auto-detect
+    hidden_imports = [
+        "uvicorn",
+        "uvicorn.logging",
+        "uvicorn.loops",
+        "uvicorn.loops.auto",
+        "uvicorn.protocols",
+        "uvicorn.protocols.http",
+        "uvicorn.protocols.http.auto",
+        "uvicorn.protocols.websockets",
+        "uvicorn.protocols.websockets.auto",
+        "uvicorn.lifespan",
+        "uvicorn.lifespan.on",
+        "fastapi",
+        "pydantic",
+        "httpx",
+        "slowapi",
+        "dotenv",
+        "sqlite3",
+        "config",
+        "main",
+    ]
+
     pyinstaller_cmd = [
         sys.executable, "-m", "PyInstaller",
         "--name", "InteliJob",
-        "--noconfirm", # Overwrite output if it exists
-        "--onefile",   # Make a single executable
+        "--noconfirm",
+        "--onefile",
         "--add-data", add_dist,
         "--add-data", add_certs,
-        str(BACKEND / "app.py")
+        "--paths", str(BACKEND),
     ]
-    
+
+    for mod in hidden_imports:
+        pyinstaller_cmd.extend(["--hidden-import", mod])
+
+    pyinstaller_cmd.append(str(BACKEND / "app.py"))
+
     run_cmd(pyinstaller_cmd, cwd=ROOT)
     
     print("\n=== Build Complete ===")

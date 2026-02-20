@@ -24,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, onViewChange }) => {
           <Heading size="sm" color={title} fontWeight="bold" letterSpacing="tight">
             InteliJob
           </Heading>
-          <Badge colorScheme="teal" variant="subtle" fontSize="2xs">v3</Badge>
+          <Badge colorScheme="teal" variant="subtle" fontSize="2xs">v1.0.0</Badge>
         </HStack>
 
         <HStack spacing={1}>
